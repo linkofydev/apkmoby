@@ -15,6 +15,7 @@ export interface ApkPayload {
   ratingValue: number;
   ratingCount: number;
   modFeatures: string[];
+  modHtml?: string;
   downloadUrl: string;
   publishDate: string;
   updatedDate: string;
@@ -53,6 +54,7 @@ export function toMarkdown(data: ApkPayload): string {
     ...(features.length
       ? ['modFeatures:', ...features.map((f) => `  - ${yamlEscape(f)}`)]
       : ['modFeatures: []']),
+    ...(data.modHtml ? [`modHtml: ${yamlEscape(data.modHtml)}`] : []),
     `downloadUrl: ${yamlEscape(data.downloadUrl)}`,
     `publishDate: ${data.publishDate}`,
     `updatedDate: ${data.updatedDate}`,
@@ -101,7 +103,15 @@ export function fromMarkdown(raw: string): ApkPayload {
       continue;
     }
     if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-      data[current] = value.slice(1, -1);
+      if (value.startsWith('"')) {
+        try {
+          data[current] = JSON.parse(value);
+        } catch {
+          data[current] = value.slice(1, -1);
+        }
+      } else {
+        data[current] = value.slice(1, -1);
+      }
     } else if (/^\d+(\.\d+)?$/.test(value)) {
       data[current] = Number(value);
     } else {
@@ -126,6 +136,7 @@ export function fromMarkdown(raw: string): ApkPayload {
     ratingValue: Number(data.ratingValue || 0),
     ratingCount: Number(data.ratingCount || 0),
     modFeatures: lists.modFeatures || [],
+    modHtml: data.modHtml ? String(data.modHtml) : undefined,
     downloadUrl: String(data.downloadUrl || ''),
     publishDate: String(data.publishDate || ''),
     updatedDate: String(data.updatedDate || ''),

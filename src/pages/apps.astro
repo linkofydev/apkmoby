@@ -1,0 +1,38 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ListingCard from '../components/ListingCard.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { getApks, splitGamesAndApps } from '../lib/apk';
+
+const all = await getApks();
+const { appsOnly } = splitGamesAndApps(all);
+---
+
+<BaseLayout
+  title="Latest Apps"
+  description="Browse the latest Android MOD apps on Apk Moby with ratings, categories, and feature highlights."
+  canonical="/apps"
+>
+  <div class="bg-neutral-100 py-8">
+    <div class="mx-auto max-w-6xl px-4">
+      <Breadcrumbs items={[{ label: 'Home', href: '/' }, { label: 'Apps' }]} />
+      <div class="mb-6 flex items-center gap-2">
+        <span class="grid h-7 w-7 place-items-center rounded-lg bg-emerald-100 text-emerald-600" aria-hidden="true">❋</span>
+        <h1 class="text-3xl font-extrabold text-slate-900">Latest Apps</h1>
+      </div>
+      {
+        appsOnly.length > 0 ? (
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            {appsOnly.map((app) => (
+              <ListingCard app={app} />
+            ))}
+          </div>
+        ) : (
+          <p class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-600">
+            No apps published yet.
+          </p>
+        )
+      }
+    </div>
+  </div>
+</BaseLayout>

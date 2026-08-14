@@ -21,6 +21,7 @@ const apk = defineCollection({
     ratingValue: z.number(),
     ratingCount: z.number(),
     modFeatures: z.array(z.string()),
+    modHtml: z.string().optional(),
     downloadUrl: z.string(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date(),

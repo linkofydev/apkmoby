@@ -1,4 +1,5 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
+import { isGameCategory } from '../config';
 
 export type ApkEntry = CollectionEntry<'apk'>;
 
@@ -64,6 +65,16 @@ export function appsByCategory(apps: ApkEntry[]): { category: string; apps: ApkE
   return [...map.entries()]
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([category, grouped]) => ({ category, apps: grouped }));
+}
+
+export function splitGamesAndApps(apps: ApkEntry[]): { games: ApkEntry[]; appsOnly: ApkEntry[] } {
+  const games: ApkEntry[] = [];
+  const appsOnly: ApkEntry[] = [];
+  for (const app of apps) {
+    if (isGameCategory(app.data.category)) games.push(app);
+    else appsOnly.push(app);
+  }
+  return { games, appsOnly };
 }
 
 export function defaultFaqs(app: ApkEntry) {

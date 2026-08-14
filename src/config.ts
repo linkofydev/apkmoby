@@ -18,11 +18,43 @@ export const SITE = {
 
 export const NAV = [
   { href: '/', label: 'Home' },
+  { href: '/games', label: 'Games' },
+  { href: '/apps', label: 'Apps' },
   { href: '/about', label: 'About' },
+] as const;
+
+/** Categories shown under “Latest Games” on the homepage. */
+export const GAME_CATEGORIES = ['Games', 'Role Play', 'Casino', 'Slot'] as const;
+
+export const ADMIN_CATEGORIES = [
+  'Games',
+  'Tools',
+  'Lifestyle',
+  'Photography',
+  'Social',
+  'Productivity',
+  'Music',
+  'Health',
+  'Apk',
+  'App',
+  'Entertainment',
+  'Mod',
+  'Casino',
+  'Slot',
+  'Role Play',
+  'Other',
 ] as const;
 
 export const CATEGORY_SCHEMA: Record<string, string> = {
   games: 'GameApplication',
+  'role-play': 'GameApplication',
+  casino: 'GameApplication',
+  slot: 'GameApplication',
+  entertainment: 'MultimediaApplication',
+  mod: 'SoftwareApplication',
+  apk: 'SoftwareApplication',
+  app: 'SoftwareApplication',
+  other: 'SoftwareApplication',
   tools: 'UtilitiesApplication',
   social: 'SocialNetworkingApplication',
   photography: 'MultimediaApplication',
@@ -41,6 +73,11 @@ export function absoluteUrl(path = '/'): string {
 
 export function categorySlug(category: string): string {
   return category.trim().toLowerCase().replace(/\s+/g, '-');
+}
+
+export function isGameCategory(category: string): boolean {
+  const slug = categorySlug(category);
+  return GAME_CATEGORIES.some((c) => categorySlug(c) === slug);
 }
 
 export function applicationCategory(category: string): string {

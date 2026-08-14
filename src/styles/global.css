@@ -65,14 +65,46 @@ body {
   line-height: 1.6;
 }
 
-.prose-apk :where(a) {
-  color: #0891b2;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.prose-apk :where(table) {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0 1.25rem;
+  font-size: 0.95rem;
 }
 
-.dark .prose-apk :where(a) {
-  color: #67e8f9;
+.prose-apk :where(th),
+.prose-apk :where(td) {
+  border: 1px solid #cbd5e1;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+}
+
+.dark .prose-apk :where(th),
+.dark .prose-apk :where(td) {
+  border-color: #334155;
+}
+
+.prose-apk :where(th) {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.dark .prose-apk :where(th) {
+  background: #1e293b;
+}
+
+.prose-apk :where(img) {
+  border-radius: 0.75rem;
+  margin: 1rem 0;
+  max-width: 100%;
+  height: auto;
+}
+
+.prose-apk :where(blockquote) {
+  border-left: 3px solid #22d3ee;
+  margin: 1rem 0;
+  padding-left: 1rem;
+  color: #64748b;
 }
 
 .shot-track {

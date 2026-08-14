@@ -8,7 +8,7 @@ export const onRequestPost: PagesFunction<CmsEnv> = async ({ request, env }) => 
   const form = await request.formData();
   const file = form.get('file');
   if (!(file instanceof File)) return json({ error: 'No file' }, { status: 400 });
-  if (file.size > 2_000_000) return json({ error: 'Max file size is 2MB' }, { status: 400 });
+  if (file.size > 5_000_000) return json({ error: 'Max file size is 5MB' }, { status: 400 });
   try {
     const bytes = await file.arrayBuffer();
     const url = await uploadAsset(env, file.name, bytes, file.type || 'application/octet-stream');

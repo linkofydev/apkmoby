@@ -1,7 +1,8 @@
 ---
 import '../../styles/global.css';
+import { ADMIN_CATEGORIES } from '../../config';
 
-const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Productivity', 'Music', 'Health'];
+const categories = [...ADMIN_CATEGORIES];
 ---
 
 <!doctype html>
@@ -12,6 +13,15 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
     <meta name="robots" content="noindex, nofollow" />
     <title>Admin Panel</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js" referrerpolicy="origin"></script>
+    <style is:global>
+      .tox-tinymce { border-radius: 0.75rem !important; border-color: rgba(255,255,255,0.12) !important; }
+      .tox .tox-toolbar, .tox .tox-menubar, .tox .tox-edit-area__iframe { background: #121a2b !important; }
+      .tox .tox-tbtn, .tox .tox-mbtn, .tox .tox-label, .tox .tox-statusbar { color: #e2e8f0 !important; }
+      .shot-thumb { width: 4.5rem; height: 8rem; object-fit: cover; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.12); }
+      .preview-icon { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.12); }
+      .preview-featured { width: 12rem; height: 6.75rem; object-fit: cover; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.12); }
+    </style>
   </head>
   <body class="min-h-screen bg-ink text-slate-100 antialiased">
     <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
@@ -36,8 +46,8 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           <p class="font-bold">Apk Moby · Admin</p>
           <div class="flex gap-2">
-            <button id="btn-new" class="rounded-lg bg-cyan-400 px-3 py-1.5 text-sm font-bold text-ink">New APK</button>
-            <button id="btn-logout" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
+            <button id="btn-new" type="button" class="rounded-lg bg-cyan-400 px-3 py-1.5 text-sm font-bold text-ink">New APK</button>
+            <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
           </div>
         </div>
       </header>
@@ -52,11 +62,18 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         </section>
 
         <section id="editor-panel" class="hidden">
-          <button id="btn-back" class="mb-4 text-sm text-cyan-300">← Back to list</button>
+          <button id="btn-back" type="button" class="mb-4 text-sm text-cyan-300">← Back to list</button>
           <form id="editor" class="grid gap-4 md:grid-cols-2">
             <input type="hidden" name="sha" />
             <label class="text-sm">App name<input name="appName" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
-            <label class="text-sm">Slug<input name="slug" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">
+              Slug / page URL
+              <div class="mt-1 flex overflow-hidden rounded-lg border border-white/10">
+                <span class="shrink-0 bg-white/5 px-3 py-2 text-sm text-slate-400">https://apkmoby.com/</span>
+                <input name="slug" required placeholder="clash-of-clans-mod" class="min-w-0 flex-1 bg-ink-card px-3 py-2 outline-none" />
+              </div>
+              <p class="mt-1 text-xs text-slate-500">SEO slug only — type the keyword part after the domain.</p>
+            </label>
             <label class="text-sm md:col-span-2">Title<input name="title" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm md:col-span-2">Meta title<input name="metaTitle" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm md:col-span-2">Meta description<textarea name="metaDescription" required rows="2" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
@@ -76,16 +93,56 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
             <label class="text-sm">Publish date<input name="publishDate" type="date" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm">Updated date<input name="updatedDate" type="date" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm md:col-span-2">Download URL<input name="downloadUrl" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
-            <label class="text-sm md:col-span-2">Icon URL<input name="icon" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
-            <label class="text-sm md:col-span-2">Featured image URL<input name="featuredImage" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
-            <label class="text-sm md:col-span-2">MOD features (comma separated)<input name="modFeatures" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
-            <label class="text-sm md:col-span-2">Screenshots (one URL per line)<textarea name="screenshots" rows="3" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
-            <label class="text-sm md:col-span-2">Body / description<textarea name="body" rows="8" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
-            <div class="md:col-span-2 rounded-xl border border-white/10 p-3 text-sm">
-              <p class="mb-2 font-medium">Upload image</p>
-              <input id="file-upload" type="file" accept="image/*" />
-              <p id="upload-status" class="mt-2 text-slate-400"></p>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <p class="text-sm font-medium">Icon URL</p>
+              <p class="mt-1 text-xs text-slate-400">Required size: <strong class="text-slate-200">512×512 px</strong> square (PNG or WebP). Max 5MB. Shown at ~72×72 on the homepage.</p>
+              <div class="mt-3 flex flex-wrap items-start gap-3">
+                <input name="icon" class="min-w-[14rem] flex-1 rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" placeholder="/uploads/icon.png" />
+                <button type="button" id="btn-icon-upload" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Upload from PC</button>
+                <input id="icon-file" type="file" accept="image/*" class="hidden" />
+                <img id="icon-preview" alt="" class="preview-icon hidden" />
+              </div>
+              <p id="icon-status" class="mt-2 text-xs text-slate-400"></p>
             </div>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <p class="text-sm font-medium">Featured image URL</p>
+              <p class="mt-1 text-xs text-slate-400">Required size: <strong class="text-slate-200">1280×720 px</strong> (16:9) PNG/JPG/WebP. Max 5MB. Used for cover and social share.</p>
+              <div class="mt-3 flex flex-wrap items-start gap-3">
+                <input name="featuredImage" class="min-w-[14rem] flex-1 rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" placeholder="/uploads/cover.jpg" />
+                <button type="button" id="btn-featured-upload" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Upload from PC</button>
+                <input id="featured-file" type="file" accept="image/*" class="hidden" />
+                <img id="featured-preview" alt="" class="preview-featured hidden" />
+              </div>
+              <p id="featured-status" class="mt-2 text-xs text-slate-400"></p>
+            </div>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <p class="text-sm font-medium">MOD features</p>
+              <p class="mt-1 mb-3 text-xs text-slate-400">Use the toolbar for headings, bold, lists, and links. Homepage cards show the plain-text summary.</p>
+              <textarea id="mod-html" name="modHtml" rows="6" class="w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm"></textarea>
+            </div>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <p class="text-sm font-medium">Screenshots</p>
+              <p class="mt-1 text-xs text-slate-400">Recommended: <strong class="text-slate-200">1080×1920</strong> (9:16 phone) or <strong class="text-slate-200">1280×720</strong>. Max 5MB each. Upload adds URLs automatically and shows previews.</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <button type="button" id="btn-shot-upload" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Upload from PC</button>
+                <button type="button" id="btn-shot-url" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Add image URL</button>
+                <input id="shot-file" type="file" accept="image/*" multiple class="hidden" />
+              </div>
+              <div id="shot-previews" class="mt-3 flex flex-wrap gap-2"></div>
+              <textarea name="screenshots" rows="3" class="mt-3 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" placeholder="One image URL per line"></textarea>
+              <p id="shot-status" class="mt-2 text-xs text-slate-400"></p>
+            </div>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <p class="text-sm font-medium">Body / description</p>
+              <p class="mt-1 mb-3 text-xs text-slate-400">Full article editor: headings, bold/italic, bullets, numbered lists, links, tables, and images.</p>
+              <textarea id="body-html" name="body" rows="12" class="w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm"></textarea>
+            </div>
+
             <p id="editor-error" class="hidden md:col-span-2 text-sm text-red-400"></p>
             <div class="md:col-span-2 flex flex-wrap gap-3">
               <button id="btn-save" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save / Publish</button>
@@ -107,6 +164,7 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
       let mode = 'create';
       let currentSlug = '';
       let rows = [];
+      let editorsReady = false;
 
       const today = () => new Date().toISOString().slice(0, 10);
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -117,6 +175,15 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         show(n, !!msg);
       };
 
+      function normalizeSlug(v) {
+        return String(v || '')
+          .trim()
+          .replace(/^https?:\/\/(www\.)?apkmoby\.com\/?/i, '')
+          .replace(/^\/+/, '')
+          .split(/[?#]/)[0]
+          .replace(/\/+$/, '');
+      }
+
       async function api(url, opts) {
         const res = await fetch(url, { credentials: 'same-origin', ...opts });
         const data = await res.json().catch(() => ({}));
@@ -124,58 +191,223 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         return data;
       }
 
+      async function uploadFile(file, statusEl) {
+        if (statusEl) statusEl.textContent = 'Uploading…';
+        const fd = new FormData();
+        fd.append('file', file);
+        const data = await api('/api/admin/upload', { method: 'POST', body: fd });
+        if (statusEl) statusEl.textContent = 'Uploaded: ' + data.url;
+        return data.url;
+      }
+
+      function featuresToHtml(list) {
+        if (!list || !list.length) return '';
+        return '<ul>' + list.map((f) => '<li>' + String(f).replace(/</g, '&lt;') + '</li>').join('') + '</ul>';
+      }
+
+      function htmlToFeatures(html) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html || '';
+        const lis = [...tmp.querySelectorAll('li')].map((li) => li.textContent.trim()).filter(Boolean);
+        if (lis.length) return lis;
+        return (tmp.innerText || '')
+          .split(/\n|,/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      function shotList() {
+        return String(form.screenshots.value || '')
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      function setShots(urls) {
+        form.screenshots.value = urls.join('\n');
+        renderShotPreviews();
+      }
+
+      function renderShotPreviews() {
+        const box = document.getElementById('shot-previews');
+        const urls = shotList();
+        box.innerHTML = urls
+          .map(
+            (u, i) =>
+              '<div class="relative">' +
+              '<img class="shot-thumb" src="' +
+              u +
+              '" alt="Screenshot ' +
+              (i + 1) +
+              '" />' +
+              '<button type="button" data-shot-del="' +
+              i +
+              '" class="absolute -right-1 -top-1 rounded-full bg-red-500 px-1.5 text-xs">×</button></div>',
+          )
+          .join('');
+      }
+
+      function updateMediaPreviews() {
+        const icon = form.icon.value.trim();
+        const featured = form.featuredImage.value.trim();
+        const iconPrev = document.getElementById('icon-preview');
+        const featPrev = document.getElementById('featured-preview');
+        if (icon) {
+          iconPrev.src = icon;
+          show(iconPrev, true);
+        } else show(iconPrev, false);
+        if (featured) {
+          featPrev.src = featured;
+          show(featPrev, true);
+        } else show(featPrev, false);
+      }
+
+      async function imageUploadHandler(blobInfo) {
+        const fd = new FormData();
+        fd.append('file', blobInfo.blob(), blobInfo.filename());
+        const data = await api('/api/admin/upload', { method: 'POST', body: fd });
+        return data.url;
+      }
+
+      async function ensureEditors() {
+        if (editorsReady || typeof tinymce === 'undefined') return;
+        await tinymce.init({
+          selector: '#mod-html',
+          base_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.6.1',
+          suffix: '.min',
+          menubar: false,
+          branding: false,
+          promotion: false,
+          height: 220,
+          content_style:
+            'body{font-family:system-ui,sans-serif;font-size:14px;color:#0f172a;background:#fff;padding:8px}',
+          plugins: 'lists link autolink',
+          toolbar: 'styles | bold italic underline | bullist numlist | link | removeformat',
+          relative_urls: false,
+          convert_urls: false,
+        });
+        await tinymce.init({
+          selector: '#body-html',
+          base_url: 'https://cdn.jsdelivr.net/npm/tinymce@7.6.1',
+          suffix: '.min',
+          menubar: 'edit insert format table',
+          branding: false,
+          promotion: false,
+          height: 420,
+          content_style:
+            'body{font-family:system-ui,sans-serif;font-size:15px;line-height:1.6;color:#0f172a;background:#fff;padding:12px} table{border-collapse:collapse;width:100%} td,th{border:1px solid #cbd5e1;padding:6px 8px}',
+          plugins: 'lists link table image code fullscreen autolink',
+          toolbar:
+            'undo redo | styles | bold italic underline | alignleft aligncenter alignright | bullist numlist | link table image | code removeformat',
+          images_upload_handler: imageUploadHandler,
+          relative_urls: false,
+          convert_urls: false,
+        });
+        editorsReady = true;
+      }
+
+      function setEditorContent(id, html) {
+        const ed = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
+        if (ed) ed.setContent(html || '');
+        else {
+          const el = document.getElementById(id);
+          if (el) el.value = html || '';
+        }
+      }
+
+      function getEditorContent(id) {
+        const ed = typeof tinymce !== 'undefined' ? tinymce.get(id) : null;
+        if (ed) return ed.getContent();
+        const el = document.getElementById(id);
+        return el ? el.value : '';
+      }
+
       function emptyPayload() {
         return {
-          title: '', metaTitle: '', metaDescription: '', appName: '', slug: '', icon: '',
-          category: 'Games', version: '', size: '', developer: '', packageName: '', reqAndroid: '',
-          totalDownloads: '', ratingValue: 4.5, ratingCount: 0, modFeatures: '', downloadUrl: '',
-          publishDate: today(), updatedDate: today(), featuredImage: '', screenshots: '', body: '', sha: ''
+          title: '',
+          metaTitle: '',
+          metaDescription: '',
+          appName: '',
+          slug: '',
+          icon: '',
+          category: 'Games',
+          version: '',
+          size: '',
+          developer: '',
+          packageName: '',
+          reqAndroid: '',
+          totalDownloads: '',
+          ratingValue: 4.5,
+          ratingCount: 0,
+          modFeatures: [],
+          modHtml: '',
+          downloadUrl: '',
+          publishDate: today(),
+          updatedDate: today(),
+          featuredImage: '',
+          screenshots: [],
+          body: '',
+          sha: '',
         };
       }
 
-      function fillForm(p) {
-        const map = {
-          sha: p.sha || '', appName: p.appName || '', slug: p.slug || '', title: p.title || '',
-          metaTitle: p.metaTitle || '', metaDescription: p.metaDescription || '', category: p.category || 'Games',
-          version: p.version || '', size: p.size || '', developer: p.developer || '', packageName: p.packageName || '',
-          reqAndroid: p.reqAndroid || '', totalDownloads: p.totalDownloads || '', ratingValue: p.ratingValue || 4.5,
-          ratingCount: p.ratingCount || 0, publishDate: (p.publishDate || today()).slice(0, 10),
-          updatedDate: (p.updatedDate || today()).slice(0, 10), downloadUrl: p.downloadUrl || '',
-          icon: p.icon || '', featuredImage: p.featuredImage || '',
-          modFeatures: Array.isArray(p.modFeatures) ? p.modFeatures.join(', ') : (p.modFeatures || ''),
-          screenshots: Array.isArray(p.screenshots) ? p.screenshots.join('\n') : (p.screenshots || ''),
-          body: p.body || ''
-        };
-        Object.keys(map).forEach((k) => { if (form[k]) form[k].value = map[k]; });
+      async function fillForm(p) {
+        await ensureEditors();
+        form.sha.value = p.sha || '';
+        form.appName.value = p.appName || '';
+        form.slug.value = normalizeSlug(p.slug || '');
+        form.title.value = p.title || '';
+        form.metaTitle.value = p.metaTitle || '';
+        form.metaDescription.value = p.metaDescription || '';
+        form.category.value = p.category || 'Games';
+        form.version.value = p.version || '';
+        form.size.value = p.size || '';
+        form.developer.value = p.developer || '';
+        form.packageName.value = p.packageName || '';
+        form.reqAndroid.value = p.reqAndroid || '';
+        form.totalDownloads.value = p.totalDownloads || '';
+        form.ratingValue.value = p.ratingValue || 4.5;
+        form.ratingCount.value = p.ratingCount || 0;
+        form.publishDate.value = (p.publishDate || today()).toString().slice(0, 10);
+        form.updatedDate.value = (p.updatedDate || today()).toString().slice(0, 10);
+        form.downloadUrl.value = p.downloadUrl || '';
+        form.icon.value = p.icon || '';
+        form.featuredImage.value = p.featuredImage || '';
+        const features = Array.isArray(p.modFeatures) ? p.modFeatures : [];
+        setEditorContent('mod-html', p.modHtml || featuresToHtml(features));
+        setShots(Array.isArray(p.screenshots) ? p.screenshots : []);
+        setEditorContent('body-html', p.body || '');
+        updateMediaPreviews();
       }
 
       function readForm() {
-        const f = new FormData(form);
-        const slug = String(f.get('slug') || '').trim();
+        const slug = normalizeSlug(form.slug.value);
+        const modHtml = getEditorContent('mod-html');
         return {
-          sha: String(f.get('sha') || ''),
-          title: String(f.get('title') || ''),
-          metaTitle: String(f.get('metaTitle') || ''),
-          metaDescription: String(f.get('metaDescription') || ''),
-          appName: String(f.get('appName') || ''),
+          sha: form.sha.value || '',
+          title: form.title.value || '',
+          metaTitle: form.metaTitle.value || '',
+          metaDescription: form.metaDescription.value || '',
+          appName: form.appName.value || '',
           slug,
-          icon: String(f.get('icon') || ''),
-          category: String(f.get('category') || 'Games'),
-          version: String(f.get('version') || ''),
-          size: String(f.get('size') || ''),
-          developer: String(f.get('developer') || ''),
-          packageName: String(f.get('packageName') || ''),
-          reqAndroid: String(f.get('reqAndroid') || ''),
-          totalDownloads: String(f.get('totalDownloads') || ''),
-          ratingValue: Number(f.get('ratingValue') || 0),
-          ratingCount: Number(f.get('ratingCount') || 0),
-          modFeatures: String(f.get('modFeatures') || '').split(',').map((s) => s.trim()).filter(Boolean),
-          downloadUrl: String(f.get('downloadUrl') || ''),
-          publishDate: String(f.get('publishDate') || today()),
+          icon: form.icon.value || '',
+          category: form.category.value || 'Games',
+          version: form.version.value || '',
+          size: form.size.value || '',
+          developer: form.developer.value || '',
+          packageName: form.packageName.value || '',
+          reqAndroid: form.reqAndroid.value || '',
+          totalDownloads: form.totalDownloads.value || '',
+          ratingValue: Number(form.ratingValue.value || 0),
+          ratingCount: Number(form.ratingCount.value || 0),
+          modFeatures: htmlToFeatures(modHtml),
+          modHtml,
+          downloadUrl: form.downloadUrl.value || '',
+          publishDate: form.publishDate.value || today(),
           updatedDate: today(),
-          featuredImage: String(f.get('featuredImage') || ''),
-          screenshots: String(f.get('screenshots') || '').split('\n').map((s) => s.trim()).filter(Boolean),
-          body: String(f.get('body') || '')
+          featuredImage: form.featuredImage.value || '',
+          screenshots: shotList(),
+          body: getEditorContent('body-html'),
         };
       }
 
@@ -186,15 +418,29 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
           listEl.innerHTML = '<p class="p-6 text-sm text-slate-400">No listings yet. Click New APK.</p>';
           return;
         }
-        listEl.innerHTML = `<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">App</th><th>Category</th><th>Version</th><th>Updated</th><th></th></tr></thead><tbody>${items.map((r) => `<tr class="border-t border-white/10">
-          <td class="px-4 py-3 font-medium">${r.appName}</td>
-          <td>${r.category}</td>
-          <td>${r.version}</td>
-          <td>${r.updatedDate || ''}</td>
-          <td class="px-4 py-3 text-right space-x-3">
-            <button data-edit="${r.slug}" class="text-cyan-300">Edit</button>
-            <button data-del="${r.slug}" data-sha="${r.sha}" class="text-red-300">Delete</button>
-          </td></tr>`).join('')}</tbody></table>`;
+        listEl.innerHTML =
+          '<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">App</th><th>Category</th><th>Version</th><th>Updated</th><th></th></tr></thead><tbody>' +
+          items
+            .map(
+              (r) =>
+                '<tr class="border-t border-white/10"><td class="px-4 py-3 font-medium">' +
+                r.appName +
+                '</td><td>' +
+                r.category +
+                '</td><td>' +
+                r.version +
+                '</td><td>' +
+                (r.updatedDate || '') +
+                '</td><td class="px-4 py-3 text-right space-x-3"><button type="button" data-edit="' +
+                r.slug +
+                '" class="text-cyan-300">Edit</button><button type="button" data-del="' +
+                r.slug +
+                '" data-sha="' +
+                r.sha +
+                '" class="text-red-300">Delete</button></td></tr>',
+            )
+            .join('') +
+          '</tbody></table>';
       }
 
       async function loadList() {
@@ -203,11 +449,12 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         renderList(document.getElementById('list-search').value);
       }
 
-      function openEditor(isNew) {
+      async function openEditor(isNew) {
         mode = isNew ? 'create' : 'edit';
         show(listPanel, false);
         show(editorPanel, true);
         setError('editor-error', '');
+        await ensureEditors();
       }
 
       document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -218,7 +465,7 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
           await api('/api/admin/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') })
+            body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
           });
           show(loginView, false);
           show(appView, true);
@@ -232,10 +479,11 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         await api('/api/admin/logout', { method: 'POST' });
         location.reload();
       });
-      document.getElementById('btn-new').addEventListener('click', () => {
+      document.getElementById('btn-new').addEventListener('click', async () => {
         currentSlug = '';
-        fillForm(emptyPayload());
-        openEditor(true);
+        delete form.slug.dataset.locked;
+        await fillForm(emptyPayload());
+        await openEditor(true);
       });
       document.getElementById('btn-back').addEventListener('click', () => {
         show(editorPanel, false);
@@ -245,7 +493,68 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
       form.appName.addEventListener('input', () => {
         if (mode === 'create' && !form.slug.dataset.locked) form.slug.value = slugify(form.appName.value);
       });
-      form.slug.addEventListener('input', () => { form.slug.dataset.locked = '1'; });
+      form.slug.addEventListener('input', () => {
+        form.slug.dataset.locked = '1';
+        form.slug.value = normalizeSlug(form.slug.value);
+      });
+      form.icon.addEventListener('input', updateMediaPreviews);
+      form.featuredImage.addEventListener('input', updateMediaPreviews);
+      form.screenshots.addEventListener('input', renderShotPreviews);
+
+      document.getElementById('shot-previews').addEventListener('click', (e) => {
+        const i = e.target.getAttribute('data-shot-del');
+        if (i == null) return;
+        const urls = shotList();
+        urls.splice(Number(i), 1);
+        setShots(urls);
+      });
+
+      document.getElementById('btn-icon-upload').addEventListener('click', () => document.getElementById('icon-file').click());
+      document.getElementById('btn-featured-upload').addEventListener('click', () => document.getElementById('featured-file').click());
+      document.getElementById('btn-shot-upload').addEventListener('click', () => document.getElementById('shot-file').click());
+      document.getElementById('btn-shot-url').addEventListener('click', () => {
+        const url = prompt('Image URL');
+        if (!url) return;
+        setShots(shotList().concat([url.trim()]));
+      });
+
+      document.getElementById('icon-file').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          form.icon.value = await uploadFile(file, document.getElementById('icon-status'));
+          updateMediaPreviews();
+        } catch (err) {
+          document.getElementById('icon-status').textContent = err.message;
+        }
+        e.target.value = '';
+      });
+      document.getElementById('featured-file').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          form.featuredImage.value = await uploadFile(file, document.getElementById('featured-status'));
+          updateMediaPreviews();
+        } catch (err) {
+          document.getElementById('featured-status').textContent = err.message;
+        }
+        e.target.value = '';
+      });
+      document.getElementById('shot-file').addEventListener('change', async (e) => {
+        const files = [...e.target.files];
+        if (!files.length) return;
+        const status = document.getElementById('shot-status');
+        try {
+          const urls = shotList();
+          for (const file of files) {
+            urls.push(await uploadFile(file, status));
+          }
+          setShots(urls);
+        } catch (err) {
+          status.textContent = err.message;
+        }
+        e.target.value = '';
+      });
 
       listEl.addEventListener('click', async (e) => {
         const edit = e.target.getAttribute('data-edit');
@@ -253,9 +562,9 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         if (edit) {
           const entry = await api('/api/admin/apps/' + edit);
           currentSlug = edit;
-          fillForm({ ...entry.data, sha: entry.sha });
           form.slug.dataset.locked = '1';
-          openEditor(false);
+          await fillForm({ ...entry.data, sha: entry.sha });
+          await openEditor(false);
         }
         if (del && confirm('Delete this APK listing?')) {
           await api('/api/admin/apps/' + del + '?sha=' + e.target.getAttribute('data-sha'), { method: 'DELETE' });
@@ -268,18 +577,20 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         setError('editor-error', '');
         const payload = readForm();
         if (!payload.slug) return setError('editor-error', 'Slug is required');
+        if (!payload.icon) return setError('editor-error', 'Icon URL is required');
+        if (!payload.featuredImage) return setError('editor-error', 'Featured image URL is required');
         try {
           if (mode === 'create') {
             await api('/api/admin/apps/' + payload.slug, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
             });
           } else {
             await api('/api/admin/apps/' + currentSlug, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(payload),
             });
           }
           await loadList();
@@ -292,7 +603,7 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
 
       document.getElementById('btn-duplicate').addEventListener('click', () => {
         form.sha.value = '';
-        form.slug.value = (form.slug.value || 'app') + '-copy';
+        form.slug.value = (normalizeSlug(form.slug.value) || 'app') + '-copy';
         form.slug.dataset.locked = '1';
         mode = 'create';
         currentSlug = '';
@@ -307,28 +618,13 @@ const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Pro
         show(listPanel, true);
       });
 
-      document.getElementById('file-upload').addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const status = document.getElementById('upload-status');
-        status.textContent = 'Uploading…';
-        const fd = new FormData();
-        fd.append('file', file);
-        try {
-          const data = await api('/api/admin/upload', { method: 'POST', body: fd });
-          status.textContent = 'Uploaded: ' + data.url + ' (copied to icon if empty)';
-          if (!form.icon.value) form.icon.value = data.url;
-          if (!form.featuredImage.value) form.featuredImage.value = data.url;
-        } catch (err) {
-          status.textContent = err.message;
-        }
-      });
-
-      api('/api/admin/session').then(async () => {
-        show(loginView, false);
-        show(appView, true);
-        await loadList();
-      }).catch(() => {});
+      api('/api/admin/session')
+        .then(async () => {
+          show(loginView, false);
+          show(appView, true);
+          await loadList();
+        })
+        .catch(() => {});
     </script>
   </body>
 </html>

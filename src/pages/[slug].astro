@@ -91,7 +91,7 @@ const catSlug = categorySlug(data.category);
             data-astro-prefetch="hover"
             class="mt-6 inline-flex rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-ink shadow-glow"
           >
-            Go to Download Page
+            Download Apk Now
           </a>
         </div>
       </div>
@@ -104,30 +104,40 @@ const catSlug = categorySlug(data.category);
     </article>
 
     {
-      data.modFeatures.length > 0 && (
-        <aside class="mt-8 max-w-3xl rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5">
+      (data.modHtml || data.modFeatures.length > 0) && (
+        <aside class="prose-apk mt-8 max-w-3xl rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5">
           <h2 class="text-lg font-bold text-slate-900 dark:text-white">MOD info</h2>
-          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-200">
-            {data.modFeatures.map((feature) => (
-              <li>{feature}</li>
-            ))}
-          </ul>
+          {
+            data.modHtml ? (
+              <div class="mt-3 text-sm text-slate-700 dark:text-slate-200" set:html={data.modHtml} />
+            ) : (
+              <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-200">
+                {data.modFeatures.map((feature) => (
+                  <li>{feature}</li>
+                ))}
+              </ul>
+            )
+          }
         </aside>
       )
     }
 
-    <section class="mt-10 max-w-3xl" aria-labelledby="features-heading">
-      <h2 id="features-heading" class="mb-3 text-xl font-bold">Key features</h2>
-      <ul class="grid gap-2 sm:grid-cols-2">
-        {
-          data.modFeatures.concat(['Lightweight listing page', 'Verified version metadata']).slice(0, 6).map((item) => (
-            <li class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-ink-card">
-              {item}
-            </li>
-          ))
-        }
-      </ul>
-    </section>
+    {
+      data.modFeatures.length > 0 && (
+        <section class="mt-10 max-w-3xl" aria-labelledby="features-heading">
+          <h2 id="features-heading" class="mb-3 text-xl font-bold">
+            Key features
+          </h2>
+          <ul class="grid gap-2 sm:grid-cols-2">
+            {data.modFeatures.map((item) => (
+              <li class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-ink-card">
+                {item}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
 
     <div class="mt-10">
       <Screenshots appName={data.appName} screenshots={data.screenshots} />
