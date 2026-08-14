@@ -25,13 +25,14 @@ const { Content } = await render(app);
 const related = relatedApps(apps, app, 6);
 const faqs = defaultFaqs(app);
 const catSlug = categorySlug(data.category);
+const screenshots = (data.screenshots || []).filter(Boolean);
 ---
 
 <BaseLayout
   title={data.metaTitle}
   description={data.metaDescription}
   canonical={`/${data.slug}`}
-  image={data.featuredImage}
+  image={data.featuredImage || data.icon}
   type="article"
   publishedTime={data.publishDate}
   modifiedTime={data.updatedDate}
@@ -140,7 +141,7 @@ const catSlug = categorySlug(data.category);
     }
 
     <div class="mt-10">
-      <Screenshots appName={data.appName} screenshots={data.screenshots} />
+      <Screenshots appName={data.appName} screenshots={screenshots} />
     </div>
 
     <div class="mt-10 max-w-3xl">

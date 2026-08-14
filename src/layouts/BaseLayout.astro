@@ -21,18 +21,18 @@ const props = Astro.props;
 ---
 
 <!doctype html>
-<html lang={SITE.lang} class="dark">
+<html lang={SITE.lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
     <script is:inline>
       (function () {
         try {
-          var stored = localStorage.getItem('theme');
-          var prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
-          var theme = stored || (prefersLight ? 'light' : 'dark');
+          // Default: light. Dark only when the visitor explicitly chose it.
+          var theme = localStorage.getItem('theme') || 'light';
           document.documentElement.classList.toggle('dark', theme === 'dark');
         } catch (e) {}
       })();

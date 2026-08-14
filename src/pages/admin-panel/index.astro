@@ -126,7 +126,7 @@ const categories = [...ADMIN_CATEGORIES];
 
             <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
               <p class="text-sm font-medium">Screenshots</p>
-              <p class="mt-1 text-xs text-slate-400">Recommended: <strong class="text-slate-200">1080×1920</strong> (9:16 phone) or <strong class="text-slate-200">1280×720</strong>. Max 5MB each. Upload adds URLs automatically and shows previews.</p>
+              <p class="mt-1 text-xs text-slate-400">Recommended: <strong class="text-slate-200">1080×1920</strong> (9:16 phone) or <strong class="text-slate-200">1280×720</strong>. Max 5MB each. Upload first, then click <strong class="text-slate-200">Save / Publish</strong> so the article and images go live together.</p>
               <div class="mt-3 flex flex-wrap gap-2">
                 <button type="button" id="btn-shot-upload" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Upload from PC</button>
                 <button type="button" id="btn-shot-url" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Add image URL</button>
@@ -144,6 +144,7 @@ const categories = [...ADMIN_CATEGORIES];
             </div>
 
             <p id="editor-error" class="hidden md:col-span-2 text-sm text-red-400"></p>
+            <p id="editor-success" class="hidden md:col-span-2 text-sm text-emerald-300"></p>
             <div class="md:col-span-2 flex flex-wrap gap-3">
               <button id="btn-save" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save / Publish</button>
               <button id="btn-duplicate" type="button" class="rounded-xl border border-white/15 px-5 py-2.5 text-sm">Duplicate</button>
@@ -575,10 +576,17 @@ const categories = [...ADMIN_CATEGORIES];
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
         setError('editor-error', '');
+        const success = document.getElementById('editor-success');
+        success.textContent = '';
+        show(success, false);
+        if (typeof tinymce !== 'undefined') tinymce.triggerSave();
         const payload = readForm();
         if (!payload.slug) return setError('editor-error', 'Slug is required');
         if (!payload.icon) return setError('editor-error', 'Icon URL is required');
         if (!payload.featuredImage) return setError('editor-error', 'Featured image URL is required');
+        const saveBtn = document.getElementById('btn-save');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Publishing…';
         try {
           if (mode === 'create') {
             await api('/api/admin/apps/' + payload.slug, {
@@ -593,11 +601,20 @@ const categories = [...ADMIN_CATEGORIES];
               body: JSON.stringify(payload),
             });
           }
+          success.textContent =
+            'Saved. Site rebuild starts now — homepage/article update in about 30–60 seconds. Screenshots: ' +
+            payload.screenshots.length;
+          show(success, true);
           await loadList();
-          show(editorPanel, false);
-          show(listPanel, true);
+          setTimeout(() => {
+            show(editorPanel, false);
+            show(listPanel, true);
+          }, 1800);
         } catch (err) {
           setError('editor-error', err.message);
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.textContent = 'Save / Publish';
         }
       });
 

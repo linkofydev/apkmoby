@@ -2,6 +2,18 @@ import { defineCollection } from 'astro:content';
 import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
+const stringList = z.preprocess((value) => {
+  if (value == null) return [];
+  if (Array.isArray(value)) return value.map((item) => String(item ?? '').trim()).filter(Boolean);
+  if (typeof value === 'string') {
+    return value
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+}, z.array(z.string()));
+
 const apk = defineCollection({
   loader: glob({ pattern: '**/[^_]*.md', base: './src/content/apk' }),
   schema: z.object({
@@ -21,13 +33,13 @@ const apk = defineCollection({
     totalDownloads: z.union([z.string(), z.number()]),
     ratingValue: z.coerce.number(),
     ratingCount: z.coerce.number(),
-    modFeatures: z.array(z.coerce.string()).default([]),
+    modFeatures: stringList,
     modHtml: z.string().optional(),
     downloadUrl: z.coerce.string(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date(),
     featuredImage: z.coerce.string(),
-    screenshots: z.array(z.coerce.string()).default([]),
+    screenshots: stringList,
   }),
 });
 

@@ -23,8 +23,9 @@ const catSlug = categorySlug(data.category);
   title={`Download ${data.appName} ${data.version} APK`}
   description={`Download ${data.appName} ${data.version} (${data.size}) for Android ${data.reqAndroid}. Wait for the timer, then grab the verified APK.`}
   canonical={`/download/${data.slug}`}
-  image={data.featuredImage}
+  image={data.featuredImage || data.icon}
   type="article"
+  noindex={true}
 >
   <div class="mx-auto max-w-3xl px-4 py-8">
     <Breadcrumbs

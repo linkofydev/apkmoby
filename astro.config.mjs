@@ -22,18 +22,23 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/admin') && !page.includes('/api/'),
+      filter: (page) =>
+        !page.includes('/admin') && !page.includes('/api/') && !page.includes('/download/'),
       serialize(item) {
         const path = new URL(item.url).pathname;
+        item.lastmod = new Date().toISOString();
         if (path === '/' || path === '') {
           item.changefreq = ChangeFreqEnum.DAILY;
           item.priority = 1;
         } else if (path.startsWith('/download/')) {
           item.changefreq = ChangeFreqEnum.WEEKLY;
           item.priority = 0.6;
-        } else if (path.startsWith('/category/')) {
+        } else if (path.startsWith('/category/') || path === '/games' || path === '/apps') {
           item.changefreq = ChangeFreqEnum.DAILY;
-          item.priority = 0.7;
+          item.priority = 0.8;
+        } else if (path === '/about' || path === '/privacy' || path === '/dmca') {
+          item.changefreq = ChangeFreqEnum.MONTHLY;
+          item.priority = 0.3;
         } else {
           item.changefreq = ChangeFreqEnum.WEEKLY;
           item.priority = 0.9;

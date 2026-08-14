@@ -8,6 +8,11 @@ Disallow: /admin-panel
 Disallow: /admin-panel/
 Disallow: /api/admin
 
+User-agent: Googlebot
+Allow: /
+Disallow: /admin-panel
+Disallow: /api/admin
+
 User-agent: GPTBot
 Allow: /
 

@@ -25,21 +25,19 @@ export interface ApkPayload {
 }
 
 function yamlEscape(value: string | number | boolean | null | undefined): string {
-  const s = String(value ?? '');
-  // Quote values that YAML would otherwise parse as numbers/bools/null or special syntax.
-  if (
-    s === '' ||
-    /[:#\n"'{}[\],&*?;]|^\s|\s$/.test(s) ||
-    /^(?:true|false|null|~|[-+]?\d+(?:\.\d+)?(?:e[-+]?\d+)?)$/i.test(s)
-  ) {
-    return JSON.stringify(s);
-  }
-  return s;
+  // Always quote strings so YAML never coerces versions like 1 / 4.0 into numbers.
+  return JSON.stringify(String(value ?? ''));
+}
+
+function yamlList(key: string, items: string[]): string[] {
+  const cleaned = (items || []).map((item) => String(item || '').trim()).filter(Boolean);
+  if (!cleaned.length) return [`${key}: []`];
+  return [key + ':', ...cleaned.map((item) => `  - ${yamlEscape(item)}`)];
 }
 
 export function toMarkdown(data: ApkPayload): string {
-  const features = (data.modFeatures || []).filter(Boolean);
-  const shots = (data.screenshots || []).filter(Boolean);
+  const features = (data.modFeatures || []).map((f) => String(f || '').trim()).filter(Boolean);
+  const shots = (data.screenshots || []).map((s) => String(s || '').trim()).filter(Boolean);
   const lines = [
     '---',
     `title: ${yamlEscape(data.title)}`,
@@ -54,20 +52,16 @@ export function toMarkdown(data: ApkPayload): string {
     `developer: ${yamlEscape(data.developer)}`,
     `packageName: ${yamlEscape(data.packageName)}`,
     `reqAndroid: ${yamlEscape(data.reqAndroid)}`,
-    `totalDownloads: ${data.totalDownloads}`,
-    `ratingValue: ${data.ratingValue}`,
-    `ratingCount: ${data.ratingCount}`,
-    ...(features.length
-      ? ['modFeatures:', ...features.map((f) => `  - ${yamlEscape(f)}`)]
-      : ['modFeatures: []']),
+    `totalDownloads: ${yamlEscape(data.totalDownloads)}`,
+    `ratingValue: ${Number(data.ratingValue) || 0}`,
+    `ratingCount: ${Number(data.ratingCount) || 0}`,
+    ...yamlList('modFeatures', features),
     ...(data.modHtml ? [`modHtml: ${yamlEscape(data.modHtml)}`] : []),
     `downloadUrl: ${yamlEscape(data.downloadUrl)}`,
-    `publishDate: ${data.publishDate}`,
-    `updatedDate: ${data.updatedDate}`,
+    `publishDate: ${yamlEscape(data.publishDate)}`,
+    `updatedDate: ${yamlEscape(data.updatedDate)}`,
     `featuredImage: ${yamlEscape(data.featuredImage)}`,
-    ...(shots.length
-      ? ['screenshots:', ...shots.map((s) => `  - ${yamlEscape(s)}`)]
-      : ['screenshots: []']),
+    ...yamlList('screenshots', shots),
     '---',
     '',
     (data.body || '').trim(),
@@ -179,6 +173,13 @@ function utf8ToBase64(str: string) {
   return btoa(binary);
 }
 
+function base64ToUtf8(b64: string) {
+  const binary = atob(b64.replace(/\n/g, ''));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
 function apkPath(slug: string) {
   return `src/content/apk/${slug}.md`;
 }
@@ -196,7 +197,7 @@ export async function getApp(env: GhEnv, slug: string) {
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`GitHub read failed (${res.status})`);
   const file = (await res.json()) as { content: string; sha: string; encoding: string };
-  const raw = atob(file.content.replace(/\n/g, ''));
+  const raw = base64ToUtf8(file.content);
   return { sha: file.sha, data: fromMarkdown(raw) };
 }
 

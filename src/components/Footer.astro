@@ -2,7 +2,8 @@
 import { SITE, categorySlug } from '../config';
 import { getApks, uniqueCategories } from '../lib/apk';
 
-const liveCats = uniqueCategories(await getApks());
+const year = new Date().getFullYear();
+const cats = uniqueCategories(await getApks()).slice(0, 6);
 ---
 
 <footer class="mt-8 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-ink-raised">
@@ -17,8 +18,10 @@ const liveCats = uniqueCategories(await getApks());
       <p class="text-sm font-semibold text-slate-900 dark:text-white">Explore</p>
       <ul class="mt-3 space-y-2 text-sm text-slate-600 dark:text-slate-400">
         <li><a class="hover:text-cyan-600 dark:hover:text-cyan-300" href="/">Home</a></li>
+        <li><a class="hover:text-cyan-600 dark:hover:text-cyan-300" href="/games">Games</a></li>
+        <li><a class="hover:text-cyan-600 dark:hover:text-cyan-300" href="/apps">Apps</a></li>
         {
-          liveCats.map((cat) => (
+          cats.map((cat) => (
             <li>
               <a class="hover:text-cyan-600 dark:hover:text-cyan-300" href={`/category/${categorySlug(cat)}`}>
                 {cat}
@@ -39,6 +42,6 @@ const liveCats = uniqueCategories(await getApks());
     </div>
   </div>
   <div class="border-t border-slate-200 py-4 text-center text-xs text-slate-500 dark:border-slate-800">
-    © {new Date().getFullYear()} {SITE.name}. All rights reserved.
+    © {year} {SITE.name}. All rights reserved.
   </div>
 </footer>
