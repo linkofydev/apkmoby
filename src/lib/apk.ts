@@ -107,3 +107,51 @@ export function resolveFaqs(app: ApkEntry): { q: string; a: string }[] {
     .filter((item) => item.q && item.a);
   return custom.length ? custom : defaultFaqs(app);
 }
+
+export function slugifyHeading(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 80);
+}
+
+/** Inject stable ids on h2/h3 so TOC anchors work with HTML article bodies. */
+export function withHeadingIds(html: string): string {
+  const used = new Set<string>();
+  return html.replace(/<h([23])(\s[^>]*)?>([\s\S]*?)<\/h\1>/gi, (match, level, attrs = '', inner) => {
+    if (/\sid\s*=/.test(attrs)) return match;
+    const label = String(inner).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    let id = slugifyHeading(label) || `section-${used.size + 1}`;
+    let n = 2;
+    while (used.has(id)) {
+      id = `${slugifyHeading(label)}-${n++}`;
+    }
+    used.add(id);
+    return `<h${level}${attrs} id="${id}">${inner}</h${level}>`;
+  });
+}
+
+export function extractBodyHeadings(html: string): { id: string; label: string }[] {
+  const items: { id: string; label: string }[] = [];
+  const used = new Set<string>();
+  const re = /<h([23])(\s[^>]*)?>([\s\S]*?)<\/h\1>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) {
+    const attrs = m[2] || '';
+    const label = String(m[3]).replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    if (!label) continue;
+    const idMatch = attrs.match(/\sid\s*=\s*["']([^"']+)["']/i);
+    let id = idMatch?.[1] || slugifyHeading(label) || `section-${items.length + 1}`;
+    let n = 2;
+    while (used.has(id)) {
+      id = `${slugifyHeading(label)}-${n++}`;
+    }
+    used.add(id);
+    items.push({ id, label });
+  }
+  return items;
+}

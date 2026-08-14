@@ -107,6 +107,29 @@ body {
   color: #64748b;
 }
 
+.prose-apk-center :where(ul),
+.prose-apk-center :where(ol) {
+  list-style-position: inside;
+  padding-left: 0;
+}
+
+.prose-apk-center :where(blockquote) {
+  border-left: none;
+  border-top: 3px solid #22d3ee;
+  padding-left: 0;
+  padding-top: 0.75rem;
+}
+
+.prose-apk-center :where(table) {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prose-apk-center :where(th),
+.prose-apk-center :where(td) {
+  text-align: center;
+}
+
 .shot-track {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;

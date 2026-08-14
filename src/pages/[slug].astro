@@ -1,15 +1,22 @@
 ---
-import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import SchemaAPK from '../components/SchemaAPK.astro';
 import OptimizedImage from '../components/OptimizedImage.astro';
 import StatsTable from '../components/StatsTable.astro';
 import Screenshots from '../components/Screenshots.astro';
+import TableOfContents from '../components/TableOfContents.astro';
 import FAQ from '../components/FAQ.astro';
 import RelatedApps from '../components/RelatedApps.astro';
 import { categorySlug } from '../config';
-import { getApks, relatedApps, resolveFaqs, formatDownloads } from '../lib/apk';
+import {
+  getApks,
+  relatedApps,
+  resolveFaqs,
+  formatDownloads,
+  withHeadingIds,
+  extractBodyHeadings,
+} from '../lib/apk';
 
 export async function getStaticPaths() {
   const apps = await getApks();
@@ -21,12 +28,20 @@ export async function getStaticPaths() {
 
 const { app, apps } = Astro.props;
 const { data } = app;
-const { Content } = await render(app);
 const related = relatedApps(apps, app, 6);
 const faqs = resolveFaqs(app);
 const catSlug = categorySlug(data.category);
 const screenshots = (data.screenshots || []).filter(Boolean);
 const summary = (data.summary || '').trim();
+const bodyHtml = withHeadingIds(app.body || '');
+const bodyHeadings = extractBodyHeadings(bodyHtml);
+
+const tocItems = [
+  { id: 'about', label: `About ${data.appName}` },
+  ...bodyHeadings,
+  ...(data.modFeatures.length > 0 ? [{ id: 'key-features', label: 'Key features' }] : []),
+  ...(faqs.length > 0 ? [{ id: 'faqs', label: 'FAQs' }] : []),
+];
 ---
 
 <BaseLayout
@@ -111,37 +126,29 @@ const summary = (data.summary || '').trim();
       <Screenshots appName={data.appName} screenshots={screenshots} />
     </div>
 
-    <article class="prose-apk mt-12 max-w-3xl text-slate-700 dark:text-slate-300">
+    <div class="mt-8 max-w-3xl">
+      <TableOfContents items={tocItems} />
+    </div>
+
+    <article
+      id="about"
+      class="prose-apk prose-apk-center mx-auto mt-12 max-w-3xl scroll-mt-24 text-center text-slate-700 dark:text-slate-300"
+    >
       <h2>About {data.appName}</h2>
-      <Content />
+      <div set:html={bodyHtml} />
     </article>
 
     {
-      (data.modHtml || data.modFeatures.length > 0) && (
-        <aside class="prose-apk mt-8 max-w-3xl rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5">
-          <h2 class="text-lg font-bold text-slate-900 dark:text-white">MOD info</h2>
-          {
-            data.modHtml ? (
-              <div class="mt-3 text-sm text-slate-700 dark:text-slate-200" set:html={data.modHtml} />
-            ) : (
-              <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-200">
-                {data.modFeatures.map((feature) => (
-                  <li>{feature}</li>
-                ))}
-              </ul>
-            )
-          }
-        </aside>
-      )
-    }
-
-    {
       data.modFeatures.length > 0 && (
-        <section class="mt-10 max-w-3xl" aria-labelledby="features-heading">
+        <section
+          id="key-features"
+          class="mx-auto mt-10 max-w-3xl scroll-mt-24 text-center"
+          aria-labelledby="features-heading"
+        >
           <h2 id="features-heading" class="mb-3 text-xl font-bold">
             Key features
           </h2>
-          <ul class="grid gap-2 sm:grid-cols-2">
+          <ul class="mx-auto grid max-w-2xl gap-2 sm:grid-cols-2">
             {data.modFeatures.map((item) => (
               <li class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-ink-card">
                 {item}
@@ -154,7 +161,7 @@ const summary = (data.summary || '').trim();
 
     {
       faqs.length > 0 && (
-        <div class="mt-10 max-w-3xl">
+        <div id="faqs" class="mx-auto mt-10 max-w-3xl scroll-mt-24">
           <FAQ items={faqs} />
         </div>
       )
