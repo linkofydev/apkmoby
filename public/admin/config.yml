@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: niamatali/custom-apk-site
+  repo: linkofydev/apkmoby
   branch: main
   # For local publishing without GitHub OAuth, keep local_backend true
   # and run: npm run cms
