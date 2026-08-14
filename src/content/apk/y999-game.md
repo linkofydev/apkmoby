@@ -15,13 +15,9 @@ totalDownloads: "100K+"
 ratingValue: 4.5
 ratingCount: 2000
 modFeatures:
-  - "Quick deposit and withdrawal."
-  - "Easy and simple user interface."
-  - "No extra app or knowledge is required"
-  - "Just download, install, and run to play."
-  - "Win bumper bonuses, prizes, and money rewards."
-  - "More."
-modHtml: "<ul>\n<li>Quick deposit and withdrawal.</li>\n<li>Easy and simple user interface.</li>\n<li>No extra app or knowledge is required</li>\n<li>Just download, install, and run to play.</li>\n<li>Win bumper bonuses, prizes, and money rewards.</li>\n<li>More.</li>\n</ul>"
+  - "Fast Desposit"
+  - "Fast Withdrawal"
+modHtml: "<ul>\n<li>Fast Desposit</li>\n<li>Fast Withdrawal</li>\n</ul>"
 summary: "Y999 Game is a digital real money gaming in Pakistan featuring 90+ casino games and seamless Android performance. It integrates trusted local payment gateways like EasyPaisa and JazzCash with robust SSL encryption for instant mobile transactions."
 faqs: [{"q":"Does Y999 officially support JazzCash and EasyPaisa?","a":"Yes, the application natively integrates local mobile wallet gateways like JazzCash and EasyPaisa for fast deposits and automated withdrawals."},{"q":"Can I run Y999 on an Apple iOS device?","a":"While there is no native iOS application file available for direct installation, Apple users can access their accounts smoothly through the responsive web browser version."},{"q":"What should I do if my deposit transaction gets stuck?","a":"Take a clear screenshot of the transaction receipt, note down the reference ID, and immediately reach out to the 24/7 in-app live customer support team for a quick resolution."},{"q":"Is it allowed to create multiple accounts on a single phone?","a":"No. Operating multiple profiles violates platform security policies and can result in an immediate permanent ban or account suspension."}]
 downloadUrl: "Y999 Game APK Download Latest Version for Android"
