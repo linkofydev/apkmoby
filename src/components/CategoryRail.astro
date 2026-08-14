@@ -1,0 +1,36 @@
+---
+import AppDockCard from './AppDockCard.astro';
+import { categorySlug } from '../config';
+import type { ApkEntry } from '../lib/apk';
+
+interface Props {
+  category: string;
+  apps: ApkEntry[];
+}
+
+const { category, apps } = Astro.props;
+const slug = categorySlug(category);
+---
+
+<section
+  id={slug}
+  class="scroll-mt-28 rounded-[1.75rem] border border-white/10 bg-white/70 p-5 shadow-sm backdrop-blur-md dark:bg-ink-card/70"
+>
+  <div class="mb-4 flex items-end justify-between gap-3">
+    <div>
+      <p class="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">
+        Shelf
+      </p>
+      <h2 class="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">{category}</h2>
+    </div>
+    <a
+      href={`/category/${slug}`}
+      class="text-sm font-semibold text-cyan-700 hover:underline dark:text-cyan-300"
+    >
+      {apps.length} {apps.length === 1 ? 'app' : 'apps'} →
+    </a>
+  </div>
+  <div class="dock-rail -mx-1 flex gap-1 overflow-x-auto px-1 pb-2">
+    {apps.map((app) => <AppDockCard app={app} />)}
+  </div>
+</section>

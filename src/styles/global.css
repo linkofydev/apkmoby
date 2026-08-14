@@ -83,3 +83,23 @@ body {
 .shot-track > * {
   scroll-snap-align: start;
 }
+
+.hero-veil {
+  background:
+    linear-gradient(180deg, rgb(7 11 20 / 0.35) 0%, rgb(7 11 20 / 0.72) 55%, rgb(7 11 20 / 0.96) 100%),
+    radial-gradient(1200px 400px at 80% 20%, rgb(34 211 238 / 0.18), transparent 60%);
+}
+
+.dock-rail {
+  scrollbar-width: none;
+}
+
+.dock-rail::-webkit-scrollbar {
+  display: none;
+}
+
+[data-app].is-dim {
+  opacity: 0.18;
+  filter: grayscale(1);
+  pointer-events: none;
+}

@@ -1,4 +1,9 @@
-# Cloudflare Pages (static output)
+# Cloudflare Pages
 name = "apkmoby"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-08-14"
+
+[vars]
+ADMIN_EMAIL = "ali.niamat.nazir@gmail.com"
+GITHUB_REPO = "linkofydev/apkmoby"
+GITHUB_BRANCH = "main"

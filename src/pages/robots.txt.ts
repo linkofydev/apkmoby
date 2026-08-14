@@ -4,7 +4,9 @@ export const GET: APIRoute = ({ site }) => {
   const sitemapURL = new URL('sitemap-index.xml', site);
   const body = `User-agent: *
 Allow: /
-Disallow: /admin/
+Disallow: /admin-panel
+Disallow: /admin-panel/
+Disallow: /api/admin
 
 User-agent: GPTBot
 Allow: /

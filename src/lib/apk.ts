@@ -3,10 +3,14 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 export type ApkEntry = CollectionEntry<'apk'>;
 
 export async function getApks(): Promise<ApkEntry[]> {
-  const apps = await getCollection('apk');
-  return apps.sort(
-    (a, b) => b.data.updatedDate.valueOf() - a.data.updatedDate.valueOf(),
-  );
+  try {
+    const apps = await getCollection('apk');
+    return apps.sort(
+      (a, b) => b.data.updatedDate.valueOf() - a.data.updatedDate.valueOf(),
+    );
+  } catch {
+    return [];
+  }
 }
 
 export async function getApkBySlug(slug: string): Promise<ApkEntry | undefined> {
@@ -48,6 +52,18 @@ export function uniqueCategories(apps: ApkEntry[]): string[] {
   return [...new Set(apps.map((app) => app.data.category))].sort((a, b) =>
     a.localeCompare(b),
   );
+}
+
+export function appsByCategory(apps: ApkEntry[]): { category: string; apps: ApkEntry[] }[] {
+  const map = new Map<string, ApkEntry[]>();
+  for (const app of apps) {
+    const list = map.get(app.data.category) ?? [];
+    list.push(app);
+    map.set(app.data.category, list);
+  }
+  return [...map.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([category, grouped]) => ({ category, apps: grouped }));
 }
 
 export function defaultFaqs(app: ApkEntry) {

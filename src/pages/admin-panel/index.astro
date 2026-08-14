@@ -1,0 +1,334 @@
+---
+import '../../styles/global.css';
+
+const categories = ['Games', 'Tools', 'Lifestyle', 'Photography', 'Social', 'Productivity', 'Music', 'Health'];
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin Panel</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body class="min-h-screen bg-ink text-slate-100 antialiased">
+    <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+      <h1 class="text-2xl font-extrabold">Publisher login</h1>
+      <p class="mt-2 text-sm text-slate-400">Private console. Not linked from the public site.</p>
+      <form id="login-form" class="mt-8 space-y-4">
+        <label class="block text-sm">
+          Email
+          <input name="email" type="email" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+        </label>
+        <label class="block text-sm">
+          Password
+          <input name="password" type="password" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+        </label>
+        <p id="login-error" class="hidden text-sm text-red-400"></p>
+        <button class="w-full rounded-xl bg-cyan-400 py-2.5 text-sm font-bold text-ink">Sign in</button>
+      </form>
+    </div>
+
+    <div id="app-view" class="hidden">
+      <header class="sticky top-0 z-20 border-b border-white/10 bg-ink/90 backdrop-blur">
+        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+          <p class="font-bold">Apk Moby · Admin</p>
+          <div class="flex gap-2">
+            <button id="btn-new" class="rounded-lg bg-cyan-400 px-3 py-1.5 text-sm font-bold text-ink">New APK</button>
+            <button id="btn-logout" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
+          </div>
+        </div>
+      </header>
+
+      <main class="mx-auto max-w-6xl px-4 py-8">
+        <section id="list-panel">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <h2 class="text-xl font-bold">All listings</h2>
+            <input id="list-search" type="search" placeholder="Search…" class="w-56 rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" />
+          </div>
+          <div id="list" class="overflow-hidden rounded-2xl border border-white/10"></div>
+        </section>
+
+        <section id="editor-panel" class="hidden">
+          <button id="btn-back" class="mb-4 text-sm text-cyan-300">← Back to list</button>
+          <form id="editor" class="grid gap-4 md:grid-cols-2">
+            <input type="hidden" name="sha" />
+            <label class="text-sm">App name<input name="appName" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Slug<input name="slug" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Title<input name="title" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Meta title<input name="metaTitle" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Meta description<textarea name="metaDescription" required rows="2" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
+            <label class="text-sm">Category
+              <select name="category" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2">
+                {categories.map((c) => <option value={c}>{c}</option>)}
+              </select>
+            </label>
+            <label class="text-sm">Version<input name="version" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Size<input name="size" required placeholder="84 MB" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Developer<input name="developer" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Package name<input name="packageName" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Required Android<input name="reqAndroid" required placeholder="8.0+" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Downloads<input name="totalDownloads" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Rating (1–5)<input name="ratingValue" type="number" min="1" max="5" step="0.1" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Rating count<input name="ratingCount" type="number" min="0" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Publish date<input name="publishDate" type="date" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm">Updated date<input name="updatedDate" type="date" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Download URL<input name="downloadUrl" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Icon URL<input name="icon" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Featured image URL<input name="featuredImage" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">MOD features (comma separated)<input name="modFeatures" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
+            <label class="text-sm md:col-span-2">Screenshots (one URL per line)<textarea name="screenshots" rows="3" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
+            <label class="text-sm md:col-span-2">Body / description<textarea name="body" rows="8" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-3 text-sm">
+              <p class="mb-2 font-medium">Upload image</p>
+              <input id="file-upload" type="file" accept="image/*" />
+              <p id="upload-status" class="mt-2 text-slate-400"></p>
+            </div>
+            <p id="editor-error" class="hidden md:col-span-2 text-sm text-red-400"></p>
+            <div class="md:col-span-2 flex flex-wrap gap-3">
+              <button id="btn-save" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save / Publish</button>
+              <button id="btn-duplicate" type="button" class="rounded-xl border border-white/15 px-5 py-2.5 text-sm">Duplicate</button>
+              <button id="btn-delete" type="button" class="rounded-xl border border-red-400/40 px-5 py-2.5 text-sm text-red-300">Delete</button>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script is:inline>
+      const loginView = document.getElementById('login-view');
+      const appView = document.getElementById('app-view');
+      const listPanel = document.getElementById('list-panel');
+      const editorPanel = document.getElementById('editor-panel');
+      const listEl = document.getElementById('list');
+      const form = document.getElementById('editor');
+      let mode = 'create';
+      let currentSlug = '';
+      let rows = [];
+
+      const today = () => new Date().toISOString().slice(0, 10);
+      const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const show = (el, on) => el.classList.toggle('hidden', !on);
+      const setError = (id, msg) => {
+        const n = document.getElementById(id);
+        n.textContent = msg || '';
+        show(n, !!msg);
+      };
+
+      async function api(url, opts) {
+        const res = await fetch(url, { credentials: 'same-origin', ...opts });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || 'Request failed');
+        return data;
+      }
+
+      function emptyPayload() {
+        return {
+          title: '', metaTitle: '', metaDescription: '', appName: '', slug: '', icon: '',
+          category: 'Games', version: '', size: '', developer: '', packageName: '', reqAndroid: '',
+          totalDownloads: '', ratingValue: 4.5, ratingCount: 0, modFeatures: '', downloadUrl: '',
+          publishDate: today(), updatedDate: today(), featuredImage: '', screenshots: '', body: '', sha: ''
+        };
+      }
+
+      function fillForm(p) {
+        const map = {
+          sha: p.sha || '', appName: p.appName || '', slug: p.slug || '', title: p.title || '',
+          metaTitle: p.metaTitle || '', metaDescription: p.metaDescription || '', category: p.category || 'Games',
+          version: p.version || '', size: p.size || '', developer: p.developer || '', packageName: p.packageName || '',
+          reqAndroid: p.reqAndroid || '', totalDownloads: p.totalDownloads || '', ratingValue: p.ratingValue || 4.5,
+          ratingCount: p.ratingCount || 0, publishDate: (p.publishDate || today()).slice(0, 10),
+          updatedDate: (p.updatedDate || today()).slice(0, 10), downloadUrl: p.downloadUrl || '',
+          icon: p.icon || '', featuredImage: p.featuredImage || '',
+          modFeatures: Array.isArray(p.modFeatures) ? p.modFeatures.join(', ') : (p.modFeatures || ''),
+          screenshots: Array.isArray(p.screenshots) ? p.screenshots.join('\n') : (p.screenshots || ''),
+          body: p.body || ''
+        };
+        Object.keys(map).forEach((k) => { if (form[k]) form[k].value = map[k]; });
+      }
+
+      function readForm() {
+        const f = new FormData(form);
+        const slug = String(f.get('slug') || '').trim();
+        return {
+          sha: String(f.get('sha') || ''),
+          title: String(f.get('title') || ''),
+          metaTitle: String(f.get('metaTitle') || ''),
+          metaDescription: String(f.get('metaDescription') || ''),
+          appName: String(f.get('appName') || ''),
+          slug,
+          icon: String(f.get('icon') || ''),
+          category: String(f.get('category') || 'Games'),
+          version: String(f.get('version') || ''),
+          size: String(f.get('size') || ''),
+          developer: String(f.get('developer') || ''),
+          packageName: String(f.get('packageName') || ''),
+          reqAndroid: String(f.get('reqAndroid') || ''),
+          totalDownloads: String(f.get('totalDownloads') || ''),
+          ratingValue: Number(f.get('ratingValue') || 0),
+          ratingCount: Number(f.get('ratingCount') || 0),
+          modFeatures: String(f.get('modFeatures') || '').split(',').map((s) => s.trim()).filter(Boolean),
+          downloadUrl: String(f.get('downloadUrl') || ''),
+          publishDate: String(f.get('publishDate') || today()),
+          updatedDate: today(),
+          featuredImage: String(f.get('featuredImage') || ''),
+          screenshots: String(f.get('screenshots') || '').split('\n').map((s) => s.trim()).filter(Boolean),
+          body: String(f.get('body') || '')
+        };
+      }
+
+      function renderList(filter) {
+        const q = (filter || '').toLowerCase();
+        const items = rows.filter((r) => (r.appName + r.category + r.slug).toLowerCase().includes(q));
+        if (!items.length) {
+          listEl.innerHTML = '<p class="p-6 text-sm text-slate-400">No listings yet. Click New APK.</p>';
+          return;
+        }
+        listEl.innerHTML = `<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">App</th><th>Category</th><th>Version</th><th>Updated</th><th></th></tr></thead><tbody>${items.map((r) => `<tr class="border-t border-white/10">
+          <td class="px-4 py-3 font-medium">${r.appName}</td>
+          <td>${r.category}</td>
+          <td>${r.version}</td>
+          <td>${r.updatedDate || ''}</td>
+          <td class="px-4 py-3 text-right space-x-3">
+            <button data-edit="${r.slug}" class="text-cyan-300">Edit</button>
+            <button data-del="${r.slug}" data-sha="${r.sha}" class="text-red-300">Delete</button>
+          </td></tr>`).join('')}</tbody></table>`;
+      }
+
+      async function loadList() {
+        const data = await api('/api/admin/apps');
+        rows = data.apps || [];
+        renderList(document.getElementById('list-search').value);
+      }
+
+      function openEditor(isNew) {
+        mode = isNew ? 'create' : 'edit';
+        show(listPanel, false);
+        show(editorPanel, true);
+        setError('editor-error', '');
+      }
+
+      document.getElementById('login-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setError('login-error', '');
+        const fd = new FormData(e.target);
+        try {
+          await api('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') })
+          });
+          show(loginView, false);
+          show(appView, true);
+          await loadList();
+        } catch (err) {
+          setError('login-error', err.message);
+        }
+      });
+
+      document.getElementById('btn-logout').addEventListener('click', async () => {
+        await api('/api/admin/logout', { method: 'POST' });
+        location.reload();
+      });
+      document.getElementById('btn-new').addEventListener('click', () => {
+        currentSlug = '';
+        fillForm(emptyPayload());
+        openEditor(true);
+      });
+      document.getElementById('btn-back').addEventListener('click', () => {
+        show(editorPanel, false);
+        show(listPanel, true);
+      });
+      document.getElementById('list-search').addEventListener('input', (e) => renderList(e.target.value));
+      form.appName.addEventListener('input', () => {
+        if (mode === 'create' && !form.slug.dataset.locked) form.slug.value = slugify(form.appName.value);
+      });
+      form.slug.addEventListener('input', () => { form.slug.dataset.locked = '1'; });
+
+      listEl.addEventListener('click', async (e) => {
+        const edit = e.target.getAttribute('data-edit');
+        const del = e.target.getAttribute('data-del');
+        if (edit) {
+          const entry = await api('/api/admin/apps/' + edit);
+          currentSlug = edit;
+          fillForm({ ...entry.data, sha: entry.sha });
+          form.slug.dataset.locked = '1';
+          openEditor(false);
+        }
+        if (del && confirm('Delete this APK listing?')) {
+          await api('/api/admin/apps/' + del + '?sha=' + e.target.getAttribute('data-sha'), { method: 'DELETE' });
+          await loadList();
+        }
+      });
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setError('editor-error', '');
+        const payload = readForm();
+        if (!payload.slug) return setError('editor-error', 'Slug is required');
+        try {
+          if (mode === 'create') {
+            await api('/api/admin/apps/' + payload.slug, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          } else {
+            await api('/api/admin/apps/' + currentSlug, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+          }
+          await loadList();
+          show(editorPanel, false);
+          show(listPanel, true);
+        } catch (err) {
+          setError('editor-error', err.message);
+        }
+      });
+
+      document.getElementById('btn-duplicate').addEventListener('click', () => {
+        form.sha.value = '';
+        form.slug.value = (form.slug.value || 'app') + '-copy';
+        form.slug.dataset.locked = '1';
+        mode = 'create';
+        currentSlug = '';
+      });
+
+      document.getElementById('btn-delete').addEventListener('click', async () => {
+        if (mode !== 'edit') return;
+        if (!confirm('Delete this listing?')) return;
+        await api('/api/admin/apps/' + currentSlug + '?sha=' + form.sha.value, { method: 'DELETE' });
+        await loadList();
+        show(editorPanel, false);
+        show(listPanel, true);
+      });
+
+      document.getElementById('file-upload').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const status = document.getElementById('upload-status');
+        status.textContent = 'Uploading…';
+        const fd = new FormData();
+        fd.append('file', file);
+        try {
+          const data = await api('/api/admin/upload', { method: 'POST', body: fd });
+          status.textContent = 'Uploaded: ' + data.url + ' (copied to icon if empty)';
+          if (!form.icon.value) form.icon.value = data.url;
+          if (!form.featuredImage.value) form.featuredImage.value = data.url;
+        } catch (err) {
+          status.textContent = err.message;
+        }
+      });
+
+      api('/api/admin/session').then(async () => {
+        show(loginView, false);
+        show(appView, true);
+        await loadList();
+      }).catch(() => {});
+    </script>
+  </body>
+</html>

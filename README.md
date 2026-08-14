@@ -28,5 +28,3 @@ Environment variables:
 - `INDEXNOW_ENABLED` = `true` after DNS is live
 
 Custom domain: `apkmoby.com` (and `www.apkmoby.com` → apex).
-
-CMS: update `repo` in `public/admin/config.yml` to your GitHub repo, then open `/admin/`.

@@ -20,7 +20,7 @@ export default function indexNow(): AstroIntegration {
             const pathname = page.pathname.replace(/^\//, '');
             return `${site}/${pathname}`.replace(/([^:]\/)\/+/g, '$1');
           })
-          .filter((url) => !url.includes('/admin'));
+          .filter((url) => !url.includes('/admin') && !url.includes('/api/'));
 
         if (urlList.length === 0) {
           logger.info('IndexNow: no URLs to submit.');

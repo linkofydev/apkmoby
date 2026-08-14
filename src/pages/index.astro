@@ -1,13 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import AppCard from '../components/AppCard.astro';
+import CategoryRail from '../components/CategoryRail.astro';
 import { SITE, absoluteUrl, categorySlug } from '../config';
-import { getApks, uniqueCategories } from '../lib/apk';
+import { getApks, appsByCategory } from '../lib/apk';
 
 const apps = await getApks();
-const featured = apps.slice(0, 3);
-const latest = apps.slice(0, 9);
-const categories = uniqueCategories(apps);
+const shelves = appsByCategory(apps);
+const total = apps.length;
 
 const websiteSchema = {
   '@context': 'https://schema.org',
@@ -31,69 +30,114 @@ const orgSchema = {
 };
 ---
 
-<BaseLayout title={`${SITE.name} — ${SITE.tagline}`} description={SITE.description} canonical="/">
+<BaseLayout
+  title={`${SITE.name} — ${SITE.tagline}`}
+  description={SITE.description}
+  canonical="/"
+  image="/images/hero-mod.jpg"
+>
   <Fragment slot="head">
     <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
   </Fragment>
 
-  <section class="border-b border-slate-200 bg-linear-to-b from-cyan-50 to-transparent dark:border-slate-800 dark:from-cyan-950/40">
-    <div class="mx-auto max-w-6xl px-4 py-14 sm:py-20">
-      <p class="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700 dark:text-cyan-300">
-        Apk Moby
-      </p>
-      <h1 class="mt-3 max-w-3xl text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl dark:text-white">
-        Download Android MOD APKs — Fast, Free & Updated
+  <section class="relative isolate min-h-[28rem] overflow-hidden sm:min-h-[34rem]">
+    <img
+      src="/images/hero-mod.jpg"
+      alt=""
+      width={1920}
+      height={1080}
+      fetchpriority="high"
+      decoding="async"
+      class="absolute inset-0 h-full w-full object-cover"
+    />
+    <div class="hero-veil absolute inset-0"></div>
+    <div class="relative mx-auto flex max-w-6xl flex-col justify-end gap-6 px-4 pb-12 pt-24 sm:pb-16 sm:pt-32">
+      <p class="text-xs font-semibold uppercase tracking-[0.28em] text-cyan-200">Android library</p>
+      <h1 class="max-w-2xl text-4xl font-extrabold tracking-tight text-white sm:text-6xl">
+        Find it. Confirm it.<br />Then download.
       </h1>
-      <p class="mt-4 max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-        {SITE.description}
+      <p class="max-w-xl text-base leading-7 text-slate-200 sm:text-lg">
+        {SITE.name} shelves every listing by category — like a phone home screen, not a cluttered dump.
       </p>
-      <div class="mt-8 flex flex-wrap gap-3">
-        <a
-          href="#latest"
-          class="rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-5 py-3 text-sm font-bold text-ink shadow-glow"
-        >
-          Browse latest APKs
-        </a>
-        <a
-          href="/admin/"
-          class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 dark:border-slate-600 dark:text-slate-200"
-        >
-          Open CMS
-        </a>
-      </div>
+      {
+        total > 0 ? (
+          <div class="relative max-w-lg">
+            <label class="sr-only" for="moby-find">
+              Find an app
+            </label>
+            <input
+              id="moby-find"
+              type="search"
+              placeholder="Jump to an app on the shelves…"
+              autocomplete="off"
+              class="w-full rounded-2xl border border-white/15 bg-black/35 py-3.5 pl-4 pr-4 text-sm text-white shadow-glow outline-none placeholder:text-slate-400 backdrop-blur-md focus:border-cyan-300"
+            />
+          </div>
+        ) : (
+          <p class="max-w-md text-sm text-slate-300">
+            The shelves are empty for now. New APKs appear here automatically, grouped by category, as soon as they are
+            published.
+          </p>
+        )
+      }
     </div>
   </section>
 
-  <div class="mx-auto max-w-6xl px-4 py-12">
-    <section aria-labelledby="cats-heading" class="mb-12">
-      <h2 id="cats-heading" class="mb-4 text-xl font-bold">Categories</h2>
-      <div class="flex flex-wrap gap-2">
-        {
-          categories.map((cat) => (
+  {
+    shelves.length > 0 && (
+      <nav
+        aria-label="Jump to category"
+        class="sticky top-16 z-30 border-b border-white/10 bg-ink/75 backdrop-blur-md"
+      >
+        <div class="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 py-3">
+          {shelves.map(({ category, apps: catApps }) => (
             <a
-              href={`/category/${categorySlug(cat)}`}
-              class="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-sm font-medium text-slate-700 hover:border-cyan-400 dark:border-slate-700 dark:bg-ink-card dark:text-slate-200"
+              href={`#${categorySlug(category)}`}
+              class="shrink-0 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-sm text-slate-200 hover:border-cyan-400/60 hover:text-white"
             >
-              {cat}
+              {category}
+              <span class="ml-1.5 text-cyan-300">{catApps.length}</span>
             </a>
-          ))
-        }
-      </div>
-    </section>
+          ))}
+        </div>
+      </nav>
+    )
+  }
 
-    <section aria-labelledby="featured-heading" class="mb-12">
-      <h2 id="featured-heading" class="mb-5 text-xl font-bold">Featured</h2>
-      <div class="grid gap-5 md:grid-cols-3">
-        {featured.map((app) => <AppCard app={app} />)}
-      </div>
-    </section>
-
-    <section id="latest" aria-labelledby="latest-heading">
-      <h2 id="latest-heading" class="mb-5 text-xl font-bold">Latest APKs</h2>
-      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {latest.map((app) => <AppCard app={app} />)}
-      </div>
-    </section>
+  <div id="library" class="mx-auto max-w-6xl space-y-8 px-4 py-12">
+    {
+      shelves.length > 0 ? (
+        shelves.map(({ category, apps: catApps }) => <CategoryRail category={category} apps={catApps} />)
+      ) : (
+        <div class="rounded-[1.75rem] border border-dashed border-slate-300 px-6 py-16 text-center dark:border-slate-700">
+          <div class="mx-auto mb-5 grid h-24 w-14 place-items-center rounded-[1.4rem] border-2 border-slate-300 dark:border-slate-600">
+            <span class="h-1.5 w-8 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-900 dark:text-white">No apps on the shelves yet</h2>
+          <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600 dark:text-slate-400">
+            Publish an APK in any category and it will land on this page in its own shelf — Games with Games, Tools with
+            Tools.
+          </p>
+        </div>
+      )
+    }
   </div>
+  {
+    total > 0 && (
+      <script is:inline>
+        (function () {
+          var input = document.getElementById('moby-find');
+          if (!input) return;
+          input.addEventListener('input', function () {
+            var q = input.value.trim().toLowerCase();
+            document.querySelectorAll('[data-app]').forEach(function (el) {
+              var hay = (el.getAttribute('data-app') || '').toLowerCase();
+              el.classList.toggle('is-dim', q.length > 0 && hay.indexOf(q) === -1);
+            });
+          });
+        })();
+      </script>
+    )
+  }
 </BaseLayout>

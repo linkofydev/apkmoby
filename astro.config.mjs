@@ -22,7 +22,7 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      filter: (page) => !page.includes('/admin'),
+      filter: (page) => !page.includes('/admin') && !page.includes('/api/'),
       serialize(item) {
         const path = new URL(item.url).pathname;
         if (path === '/' || path === '') {

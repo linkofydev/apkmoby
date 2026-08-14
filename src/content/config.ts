@@ -3,7 +3,7 @@ import { glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 
 const apk = defineCollection({
-  loader: glob({ pattern: '**/*.md', base: './src/content/apk' }),
+  loader: glob({ pattern: '**/[^_]*.md', base: './src/content/apk' }),
   schema: z.object({
     title: z.string(),
     metaTitle: z.string(),

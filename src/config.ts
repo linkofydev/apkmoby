@@ -7,7 +7,7 @@ export const SITE = {
   locale: 'en_US',
   lang: 'en',
   twitter: '@apkmoby',
-  defaultOgImage: '/og-default.svg',
+    defaultOgImage: '/images/hero-mod.jpg',
   author: 'Apk Moby',
   email: 'dmca@apkmoby.com',
   indexNowKey:
@@ -18,9 +18,7 @@ export const SITE = {
 
 export const NAV = [
   { href: '/', label: 'Home' },
-  { href: '/category/games', label: 'Games' },
-  { href: '/category/tools', label: 'Tools' },
-  { href: '/category/lifestyle', label: 'Lifestyle' },
+  { href: '/about', label: 'About' },
 ] as const;
 
 export const CATEGORY_SCHEMA: Record<string, string> = {

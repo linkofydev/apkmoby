@@ -1,12 +1,15 @@
 ---
-import { SITE, NAV } from '../config';
+import { SITE, NAV, categorySlug } from '../config';
+import { getApks, uniqueCategories } from '../lib/apk';
+
+const liveCats = uniqueCategories(await getApks());
 ---
 
 <header
-  class="sticky top-0 z-40 border-b border-slate-200/80 bg-white/80 backdrop-blur-md dark:border-slate-800/80 dark:bg-ink/80"
+  class="sticky top-0 z-40 border-b border-white/10 bg-ink/70 text-white backdrop-blur-md"
 >
   <div class="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
-    <a href="/" class="flex items-center gap-2 font-bold tracking-tight text-slate-900 dark:text-white">
+    <a href="/" class="flex items-center gap-2 font-bold tracking-tight">
       <span
         class="grid h-8 w-8 place-items-center rounded-lg bg-linear-to-br from-cyan-400 to-violet-500 text-sm text-ink shadow-glow"
         aria-hidden="true"
@@ -15,14 +18,21 @@ import { SITE, NAV } from '../config';
       </span>
       <span>{SITE.name}</span>
     </a>
-    <nav aria-label="Primary" class="hidden items-center gap-6 text-sm font-medium sm:flex">
+    <nav aria-label="Primary" class="hidden items-center gap-5 text-sm font-medium md:flex">
       {
         NAV.map((item) => (
-          <a
-            href={item.href}
-            class="text-slate-600 transition-colors hover:text-cyan-600 dark:text-slate-300 dark:hover:text-cyan-300"
-          >
+          <a href={item.href} class="text-slate-300 transition-colors hover:text-cyan-300">
             {item.label}
+          </a>
+        ))
+      }
+      {
+        liveCats.slice(0, 5).map((cat) => (
+          <a
+            href={`/category/${categorySlug(cat)}`}
+            class="text-slate-300 transition-colors hover:text-cyan-300"
+          >
+            {cat}
           </a>
         ))
       }
@@ -31,7 +41,7 @@ import { SITE, NAV } from '../config';
       <button
         type="button"
         id="theme-toggle"
-        class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 text-slate-600 transition-colors hover:border-cyan-400 dark:border-slate-700 dark:text-slate-300"
+        class="grid h-9 w-9 place-items-center rounded-lg border border-white/15 text-slate-200 transition-colors hover:border-cyan-400"
         aria-label="Toggle color theme"
       >
         <svg class="h-4 w-4 dark:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -42,20 +52,17 @@ import { SITE, NAV } from '../config';
           <path d="M21 14.5A8.5 8.5 0 1 1 9.5 3 7 7 0 0 0 21 14.5z"></path>
         </svg>
       </button>
-      <details class="relative sm:hidden">
-        <summary class="grid h-9 w-9 list-none place-items-center rounded-lg border border-slate-200 dark:border-slate-700 [&::-webkit-details-marker]:hidden">
+      <details class="relative md:hidden">
+        <summary class="grid h-9 w-9 list-none place-items-center rounded-lg border border-white/15 [&::-webkit-details-marker]:hidden">
           <span class="sr-only">Menu</span>
           <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M4 7h16M4 12h16M4 17h16"></path>
           </svg>
         </summary>
-        <div class="absolute right-0 mt-2 w-44 rounded-xl border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-ink-card">
+        <div class="absolute right-0 mt-2 w-44 rounded-xl border border-white/10 bg-ink-card p-2 shadow-lg">
           {
-            NAV.map((item) => (
-              <a
-                href={item.href}
-                class="block rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
-              >
+            [...NAV, ...liveCats.map((cat) => ({ href: `/category/${categorySlug(cat)}`, label: cat }))].map((item) => (
+              <a href={item.href} class="block rounded-lg px-3 py-2 text-sm text-slate-200 hover:bg-white/5">
                 {item.label}
               </a>
             ))
