@@ -77,6 +77,11 @@ const categories = [...ADMIN_CATEGORIES];
             <label class="text-sm md:col-span-2">Title<input name="title" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm md:col-span-2">Meta title<input name="metaTitle" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" /></label>
             <label class="text-sm md:col-span-2">Meta description<textarea name="metaDescription" required rows="2" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea></label>
+            <label class="text-sm md:col-span-2">
+              Hero summary (2–3 sentences)
+              <textarea name="summary" rows="3" maxlength="400" placeholder="Short summary shown under the H1 in the article hero box." class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2"></textarea>
+              <p class="mt-1 text-xs text-slate-500">Appears directly under the app name in the bordered hero section.</p>
+            </label>
             <label class="text-sm">Category
               <select name="category" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2">
                 {categories.map((c) => <option value={c}>{c}</option>)}
@@ -141,6 +146,17 @@ const categories = [...ADMIN_CATEGORIES];
               <p class="text-sm font-medium">Body / description</p>
               <p class="mt-1 mb-3 text-xs text-slate-400">Full article editor: headings, bold/italic, bullets, numbered lists, links, tables, and images.</p>
               <textarea id="body-html" name="body" rows="12" class="w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm"></textarea>
+            </div>
+
+            <div class="md:col-span-2 rounded-xl border border-white/10 p-4">
+              <div class="mb-3 flex items-center justify-between gap-3">
+                <div>
+                  <p class="text-sm font-medium">FAQs (research based)</p>
+                  <p class="mt-1 text-xs text-slate-400">No limit — add as many Q&amp;A pairs as you want. Empty list uses default template FAQs.</p>
+                </div>
+                <button type="button" id="btn-faq-add" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Add FAQ</button>
+              </div>
+              <div id="faq-list" class="space-y-3"></div>
             </div>
 
             <p id="editor-error" class="hidden md:col-span-2 text-sm text-red-400"></p>
@@ -323,11 +339,44 @@ const categories = [...ADMIN_CATEGORIES];
         return el ? el.value : '';
       }
 
+      function readFaqs() {
+        return [...document.querySelectorAll('#faq-list .faq-row')]
+          .map((row) => ({
+            q: (row.querySelector('[data-faq="q"]')?.value || '').trim(),
+            a: (row.querySelector('[data-faq="a"]')?.value || '').trim(),
+          }))
+          .filter((item) => item.q && item.a);
+      }
+
+      function addFaqRow(item) {
+        const box = document.getElementById('faq-list');
+        const row = document.createElement('div');
+        row.className = 'faq-row rounded-lg border border-white/10 p-3';
+        row.innerHTML =
+          '<label class="block text-xs text-slate-400">Question<input data-faq="q" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" /></label>' +
+          '<label class="mt-2 block text-xs text-slate-400">Answer<textarea data-faq="a" rows="2" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm"></textarea></label>' +
+          '<button type="button" data-faq-del class="mt-2 text-xs text-red-300">Remove</button>';
+        if (item) {
+          row.querySelector('[data-faq="q"]').value = item.q || '';
+          row.querySelector('[data-faq="a"]').value = item.a || '';
+        }
+        box.appendChild(row);
+      }
+
+      function setFaqs(list) {
+        const box = document.getElementById('faq-list');
+        box.innerHTML = '';
+        const items = Array.isArray(list) ? list.filter((item) => item && (item.q || item.a)) : [];
+        if (!items.length) return;
+        items.forEach((item) => addFaqRow(item));
+      }
+
       function emptyPayload() {
         return {
           title: '',
           metaTitle: '',
           metaDescription: '',
+          summary: '',
           appName: '',
           slug: '',
           icon: '',
@@ -342,6 +391,7 @@ const categories = [...ADMIN_CATEGORIES];
           ratingCount: 0,
           modFeatures: [],
           modHtml: '',
+          faqs: [],
           downloadUrl: '',
           publishDate: today(),
           updatedDate: today(),
@@ -360,6 +410,7 @@ const categories = [...ADMIN_CATEGORIES];
         form.title.value = p.title || '';
         form.metaTitle.value = p.metaTitle || '';
         form.metaDescription.value = p.metaDescription || '';
+        form.summary.value = p.summary || '';
         form.category.value = p.category || 'Games';
         form.version.value = p.version || '';
         form.size.value = p.size || '';
@@ -378,6 +429,7 @@ const categories = [...ADMIN_CATEGORIES];
         setEditorContent('mod-html', p.modHtml || featuresToHtml(features));
         setShots(Array.isArray(p.screenshots) ? p.screenshots : []);
         setEditorContent('body-html', p.body || '');
+        setFaqs(Array.isArray(p.faqs) ? p.faqs : []);
         updateMediaPreviews();
       }
 
@@ -389,6 +441,7 @@ const categories = [...ADMIN_CATEGORIES];
           title: form.title.value || '',
           metaTitle: form.metaTitle.value || '',
           metaDescription: form.metaDescription.value || '',
+          summary: form.summary.value || '',
           appName: form.appName.value || '',
           slug,
           icon: form.icon.value || '',
@@ -403,6 +456,7 @@ const categories = [...ADMIN_CATEGORIES];
           ratingCount: Number(form.ratingCount.value || 0),
           modFeatures: htmlToFeatures(modHtml),
           modHtml,
+          faqs: readFaqs(),
           downloadUrl: form.downloadUrl.value || '',
           publishDate: form.publishDate.value || today(),
           updatedDate: today(),
@@ -517,6 +571,11 @@ const categories = [...ADMIN_CATEGORIES];
         const url = prompt('Image URL');
         if (!url) return;
         setShots(shotList().concat([url.trim()]));
+      });
+      document.getElementById('btn-faq-add').addEventListener('click', () => addFaqRow({ q: '', a: '' }));
+      document.getElementById('faq-list').addEventListener('click', (e) => {
+        if (!e.target.getAttribute('data-faq-del')) return;
+        e.target.closest('.faq-row')?.remove();
       });
 
       document.getElementById('icon-file').addEventListener('change', async (e) => {

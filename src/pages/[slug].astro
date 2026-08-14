@@ -9,7 +9,7 @@ import Screenshots from '../components/Screenshots.astro';
 import FAQ from '../components/FAQ.astro';
 import RelatedApps from '../components/RelatedApps.astro';
 import { categorySlug } from '../config';
-import { getApks, relatedApps, defaultFaqs, formatDownloads } from '../lib/apk';
+import { getApks, relatedApps, resolveFaqs, formatDownloads } from '../lib/apk';
 
 export async function getStaticPaths() {
   const apps = await getApks();
@@ -23,9 +23,10 @@ const { app, apps } = Astro.props;
 const { data } = app;
 const { Content } = await render(app);
 const related = relatedApps(apps, app, 6);
-const faqs = defaultFaqs(app);
+const faqs = resolveFaqs(app);
 const catSlug = categorySlug(data.category);
 const screenshots = (data.screenshots || []).filter(Boolean);
+const summary = (data.summary || '').trim();
 ---
 
 <BaseLayout
@@ -50,54 +51,65 @@ const screenshots = (data.screenshots || []).filter(Boolean);
       ]}
     />
 
-    <section class="grid items-start gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-      <div class="flex gap-5">
-        <OptimizedImage
-          src={data.icon}
-          alt={`${data.appName} icon`}
-          width={96}
-          height={96}
-          loading="eager"
-          fetchpriority="high"
-          class="h-24 w-24 rounded-3xl border border-slate-200 shadow-glow dark:border-slate-700"
-        />
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {data.appName}
-            </h1>
+    <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 dark:border-slate-700 dark:bg-ink-card">
+      <div class="grid items-start gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+        <div class="flex gap-5">
+          <OptimizedImage
+            src={data.icon}
+            alt={`${data.appName} icon`}
+            width={96}
+            height={96}
+            loading="eager"
+            fetchpriority="high"
+            class="h-24 w-24 rounded-3xl border border-slate-200 shadow-glow dark:border-slate-700"
+          />
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                {data.appName}
+              </h1>
+              {
+                data.modFeatures.length > 0 && (
+                  <span class="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                    MOD
+                  </span>
+                )
+              }
+            </div>
             {
-              data.modFeatures.length > 0 && (
-                <span class="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">
-                  MOD
-                </span>
-              )
+              summary ? (
+                <p class="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300">{summary}</p>
+              ) : null
             }
+            <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{data.developer}</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              {
+                data.modFeatures.slice(0, 4).map((feature) => (
+                  <span class="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:text-cyan-200">
+                    {feature}
+                  </span>
+                ))
+              }
+            </div>
+            <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
+              ★ {data.ratingValue.toFixed(1)} · {formatDownloads(data.totalDownloads)} downloads · {data.size}
+            </p>
+            <a
+              href={`/download/${data.slug}`}
+              data-astro-prefetch="hover"
+              class="mt-6 inline-flex rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-ink shadow-glow"
+            >
+              Download Apk Now
+            </a>
           </div>
-          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{data.developer}</p>
-          <div class="mt-3 flex flex-wrap gap-2">
-            {
-              data.modFeatures.slice(0, 4).map((feature) => (
-                <span class="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:text-cyan-200">
-                  {feature}
-                </span>
-              ))
-            }
-          </div>
-          <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
-            ★ {data.ratingValue.toFixed(1)} · {formatDownloads(data.totalDownloads)} downloads · {data.size}
-          </p>
-          <a
-            href={`/download/${data.slug}`}
-            data-astro-prefetch="hover"
-            class="mt-6 inline-flex rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-ink shadow-glow"
-          >
-            Download Apk Now
-          </a>
         </div>
+        <StatsTable app={app} />
       </div>
-      <StatsTable app={app} />
     </section>
+
+    <div class="mt-10">
+      <Screenshots appName={data.appName} screenshots={screenshots} />
+    </div>
 
     <article class="prose-apk mt-12 max-w-3xl text-slate-700 dark:text-slate-300">
       <h2>About {data.appName}</h2>
@@ -140,13 +152,13 @@ const screenshots = (data.screenshots || []).filter(Boolean);
       )
     }
 
-    <div class="mt-10">
-      <Screenshots appName={data.appName} screenshots={screenshots} />
-    </div>
-
-    <div class="mt-10 max-w-3xl">
-      <FAQ items={faqs} />
-    </div>
+    {
+      faqs.length > 0 && (
+        <div class="mt-10 max-w-3xl">
+          <FAQ items={faqs} />
+        </div>
+      )
+    }
 
     <RelatedApps apps={related} />
   </div>

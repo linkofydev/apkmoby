@@ -21,6 +21,8 @@ modFeatures:
   - "clear mod"
   - "war free"
 modHtml: "<ul>\n<li>Nice Game</li>\n<li>unlimtied money</li>\n<li>amazing features</li>\n<li>clear mod</li>\n<li>war free</li>\n</ul>"
+summary: "Roblox Game Apk Download for Android. Play millions of games in every genre free of cost with friends anytime."
+faqs: []
 downloadUrl: "https://play.google.com/store/apps/details?id=com.roblox.client"
 publishDate: "2026-08-14"
 updatedDate: "2026-08-14"

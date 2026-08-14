@@ -3,7 +3,9 @@ import { SITE, categorySlug } from '../config';
 import { getApks, uniqueCategories } from '../lib/apk';
 
 const year = new Date().getFullYear();
-const cats = uniqueCategories(await getApks()).slice(0, 6);
+const cats = uniqueCategories(await getApks())
+  .filter((cat) => !['games', 'apps'].includes(categorySlug(cat)))
+  .slice(0, 6);
 ---
 
 <footer class="mt-8 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-ink-raised">

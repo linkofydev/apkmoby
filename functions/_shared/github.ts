@@ -1,3 +1,8 @@
+export interface FaqItem {
+  q: string;
+  a: string;
+}
+
 export interface ApkPayload {
   title: string;
   metaTitle: string;
@@ -16,6 +21,8 @@ export interface ApkPayload {
   ratingCount: number;
   modFeatures: string[];
   modHtml?: string;
+  summary?: string;
+  faqs?: FaqItem[];
   downloadUrl: string;
   publishDate: string;
   updatedDate: string;
@@ -38,6 +45,9 @@ function yamlList(key: string, items: string[]): string[] {
 export function toMarkdown(data: ApkPayload): string {
   const features = (data.modFeatures || []).map((f) => String(f || '').trim()).filter(Boolean);
   const shots = (data.screenshots || []).map((s) => String(s || '').trim()).filter(Boolean);
+  const faqs = (data.faqs || [])
+    .map((item) => ({ q: String(item?.q || '').trim(), a: String(item?.a || '').trim() }))
+    .filter((item) => item.q && item.a);
   const lines = [
     '---',
     `title: ${yamlEscape(data.title)}`,
@@ -57,6 +67,8 @@ export function toMarkdown(data: ApkPayload): string {
     `ratingCount: ${Number(data.ratingCount) || 0}`,
     ...yamlList('modFeatures', features),
     ...(data.modHtml ? [`modHtml: ${yamlEscape(data.modHtml)}`] : []),
+    `summary: ${yamlEscape(data.summary || '')}`,
+    `faqs: ${JSON.stringify(faqs)}`,
     `downloadUrl: ${yamlEscape(data.downloadUrl)}`,
     `publishDate: ${yamlEscape(data.publishDate)}`,
     `updatedDate: ${yamlEscape(data.updatedDate)}`,
@@ -112,11 +124,29 @@ export function fromMarkdown(raw: string): ApkPayload {
       } else {
         data[current] = value.slice(1, -1);
       }
+    } else if (value.startsWith('[') || value.startsWith('{')) {
+      try {
+        data[current] = JSON.parse(value);
+      } catch {
+        data[current] = value;
+      }
     } else if (/^\d+(\.\d+)?$/.test(value)) {
       data[current] = Number(value);
     } else {
       data[current] = value;
     }
+  }
+
+  const faqsRaw = data.faqs;
+  let faqs: FaqItem[] = [];
+  if (Array.isArray(faqsRaw)) {
+    faqs = faqsRaw
+      .map((item) => {
+        if (!item || typeof item !== 'object') return null;
+        const row = item as { q?: unknown; a?: unknown };
+        return { q: String(row.q || '').trim(), a: String(row.a || '').trim() };
+      })
+      .filter((item): item is FaqItem => !!item && !!item.q && !!item.a);
   }
 
   return {
@@ -137,6 +167,8 @@ export function fromMarkdown(raw: string): ApkPayload {
     ratingCount: Number(data.ratingCount || 0),
     modFeatures: lists.modFeatures || [],
     modHtml: data.modHtml ? String(data.modHtml) : undefined,
+    summary: String(data.summary || ''),
+    faqs,
     downloadUrl: String(data.downloadUrl || ''),
     publishDate: String(data.publishDate || ''),
     updatedDate: String(data.updatedDate || ''),

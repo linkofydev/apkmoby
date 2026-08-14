@@ -35,6 +35,21 @@ const apk = defineCollection({
     ratingCount: z.coerce.number(),
     modFeatures: stringList,
     modHtml: z.string().optional(),
+    summary: z.coerce.string().optional().default(''),
+    faqs: z
+      .preprocess((value) => {
+        if (value == null || value === '') return [];
+        if (typeof value === 'string') {
+          try {
+            const parsed = JSON.parse(value);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        }
+        return value;
+      }, z.array(z.object({ q: z.coerce.string(), a: z.coerce.string() })))
+      .default([]),
     downloadUrl: z.coerce.string(),
     publishDate: z.coerce.date(),
     updatedDate: z.coerce.date(),

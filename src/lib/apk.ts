@@ -99,3 +99,11 @@ export function defaultFaqs(app: ApkEntry) {
     },
   ];
 }
+
+/** Prefer research FAQs from CMS; fall back to template defaults when empty. */
+export function resolveFaqs(app: ApkEntry): { q: string; a: string }[] {
+  const custom = (app.data.faqs || [])
+    .map((item) => ({ q: String(item?.q || '').trim(), a: String(item?.a || '').trim() }))
+    .filter((item) => item.q && item.a);
+  return custom.length ? custom : defaultFaqs(app);
+}
