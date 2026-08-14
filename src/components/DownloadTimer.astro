@@ -31,13 +31,13 @@ const { downloadUrl, appName, seconds = SITE.downloadTimerSeconds } = Astro.prop
     aria-valuenow={seconds}
     id="timer-bar-wrap"
   >
-    <div id="timer-bar" class="h-full w-full origin-left bg-linear-to-r from-cyan-400 to-violet-500"></div>
+    <div id="timer-bar" class="h-full w-full origin-left bg-cyan-500"></div>
   </div>
   <a
     id="final-download"
     href={downloadUrl}
     rel="nofollow noopener"
-    class="mt-6 hidden items-center justify-center rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-base font-bold text-ink shadow-glow"
+    class="mt-6 hidden items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-cyan-500"
     download
   >
     Download {appName} APK
