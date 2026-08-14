@@ -24,11 +24,17 @@ export interface ApkPayload {
   body: string;
 }
 
-function yamlEscape(value: string): string {
-  if (/[:#\n"'{}[\],&*?]|^\s|\s$/.test(value)) {
-    return JSON.stringify(value);
+function yamlEscape(value: string | number | boolean | null | undefined): string {
+  const s = String(value ?? '');
+  // Quote values that YAML would otherwise parse as numbers/bools/null or special syntax.
+  if (
+    s === '' ||
+    /[:#\n"'{}[\],&*?;]|^\s|\s$/.test(s) ||
+    /^(?:true|false|null|~|[-+]?\d+(?:\.\d+)?(?:e[-+]?\d+)?)$/i.test(s)
+  ) {
+    return JSON.stringify(s);
   }
-  return value;
+  return s;
 }
 
 export function toMarkdown(data: ApkPayload): string {
