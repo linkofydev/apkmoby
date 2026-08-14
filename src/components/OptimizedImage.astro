@@ -1,6 +1,4 @@
 ---
-import { Image } from 'astro:assets';
-
 interface Props {
   src: string;
   alt: string;
@@ -20,32 +18,16 @@ const {
   loading = 'lazy',
   fetchpriority,
 } = Astro.props;
-
-const isRemote = /^https?:\/\//.test(src);
 ---
 
-{
-  isRemote ? (
-    <Image
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      class={className}
-      loading={loading}
-      decoding="async"
-      fetchpriority={fetchpriority}
-    />
-  ) : (
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      class={className}
-      loading={loading}
-      decoding="async"
-      fetchpriority={fetchpriority}
-    />
-  )
-}
+{/* Plain <img> keeps CMS remote URLs (Play Store, uploads) stable across deploys. */}
+<img
+  src={src}
+  alt={alt}
+  width={width}
+  height={height}
+  class={className}
+  loading={loading}
+  decoding="async"
+  fetchpriority={fetchpriority}
+/>

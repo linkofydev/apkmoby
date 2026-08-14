@@ -601,15 +601,20 @@ const categories = [...ADMIN_CATEGORIES];
               body: JSON.stringify(payload),
             });
           }
-          success.textContent =
-            'Saved. Site rebuild starts now — homepage/article update in about 30–60 seconds. Screenshots: ' +
+          success.innerHTML =
+            'Published live. Open: <a class="underline text-cyan-300" target="_blank" rel="noopener" href="https://apkmoby.com/' +
+            payload.slug +
+            '">https://apkmoby.com/' +
+            payload.slug +
+            '</a> — wait ~30s then hard-refresh homepage (Ctrl/Cmd+Shift+R). Screenshots saved: ' +
             payload.screenshots.length;
           show(success, true);
+          window.open('https://apkmoby.com/' + payload.slug, '_blank', 'noopener');
           await loadList();
           setTimeout(() => {
             show(editorPanel, false);
             show(listPanel, true);
-          }, 1800);
+          }, 4000);
         } catch (err) {
           setError('editor-error', err.message);
         } finally {
