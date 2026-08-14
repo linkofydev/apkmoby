@@ -97,15 +97,6 @@ const tocItems = [
               ) : null
             }
             <p class="mt-2 text-sm text-slate-500 dark:text-slate-400">{data.developer}</p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              {
-                data.modFeatures.slice(0, 4).map((feature) => (
-                  <span class="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:text-cyan-200">
-                    {feature}
-                  </span>
-                ))
-              }
-            </div>
             <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
               ★ {data.ratingValue.toFixed(1)} · {formatDownloads(data.totalDownloads)} downloads · {data.size}
             </p>

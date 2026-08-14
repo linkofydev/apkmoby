@@ -54,6 +54,25 @@ body {
   line-height: 1.7;
 }
 
+.prose-apk :where(a) {
+  color: #0891b2;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 600;
+}
+
+.prose-apk :where(a):hover {
+  color: #0e7490;
+}
+
+.dark .prose-apk :where(a) {
+  color: #22d3ee;
+}
+
+.dark .prose-apk :where(a):hover {
+  color: #67e8f9;
+}
+
 .prose-apk :where(ul) {
   margin: 0.75rem 0 1rem;
   padding-left: 1.2rem;
