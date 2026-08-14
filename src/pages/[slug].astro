@@ -1,0 +1,142 @@
+---
+import { render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import SchemaAPK from '../components/SchemaAPK.astro';
+import OptimizedImage from '../components/OptimizedImage.astro';
+import StatsTable from '../components/StatsTable.astro';
+import Screenshots from '../components/Screenshots.astro';
+import FAQ from '../components/FAQ.astro';
+import RelatedApps from '../components/RelatedApps.astro';
+import { categorySlug } from '../config';
+import { getApks, relatedApps, defaultFaqs, formatDownloads } from '../lib/apk';
+
+export async function getStaticPaths() {
+  const apps = await getApks();
+  return apps.map((app) => ({
+    params: { slug: app.data.slug },
+    props: { app, apps },
+  }));
+}
+
+const { app, apps } = Astro.props;
+const { data } = app;
+const { Content } = await render(app);
+const related = relatedApps(apps, app, 6);
+const faqs = defaultFaqs(app);
+const catSlug = categorySlug(data.category);
+---
+
+<BaseLayout
+  title={data.metaTitle}
+  description={data.metaDescription}
+  canonical={`/${data.slug}`}
+  image={data.featuredImage}
+  type="article"
+  publishedTime={data.publishDate}
+  modifiedTime={data.updatedDate}
+>
+  <Fragment slot="head">
+    <SchemaAPK app={app} />
+  </Fragment>
+
+  <div class="mx-auto max-w-6xl px-4 py-8">
+    <Breadcrumbs
+      items={[
+        { label: 'Home', href: '/' },
+        { label: data.category, href: `/category/${catSlug}` },
+        { label: data.appName },
+      ]}
+    />
+
+    <section class="grid items-start gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <div class="flex gap-5">
+        <OptimizedImage
+          src={data.icon}
+          alt={`${data.appName} icon`}
+          width={96}
+          height={96}
+          loading="eager"
+          fetchpriority="high"
+          class="h-24 w-24 rounded-3xl border border-slate-200 shadow-glow dark:border-slate-700"
+        />
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+              {data.appName}
+            </h1>
+            {
+              data.modFeatures.length > 0 && (
+                <span class="rounded-full bg-violet-500/15 px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-violet-700 dark:text-violet-300">
+                  MOD
+                </span>
+              )
+            }
+          </div>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">{data.developer}</p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            {
+              data.modFeatures.slice(0, 4).map((feature) => (
+                <span class="rounded-full border border-cyan-400/40 bg-cyan-400/10 px-2.5 py-1 text-xs font-medium text-cyan-800 dark:text-cyan-200">
+                  {feature}
+                </span>
+              ))
+            }
+          </div>
+          <p class="mt-4 text-sm text-slate-600 dark:text-slate-300">
+            ★ {data.ratingValue.toFixed(1)} · {formatDownloads(data.totalDownloads)} downloads · {data.size}
+          </p>
+          <a
+            href={`/download/${data.slug}`}
+            data-astro-prefetch="hover"
+            class="mt-6 inline-flex rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-sm font-bold text-ink shadow-glow"
+          >
+            Go to Download Page
+          </a>
+        </div>
+      </div>
+      <StatsTable app={app} />
+    </section>
+
+    <article class="prose-apk mt-12 max-w-3xl text-slate-700 dark:text-slate-300">
+      <h2>About {data.appName}</h2>
+      <Content />
+    </article>
+
+    {
+      data.modFeatures.length > 0 && (
+        <aside class="mt-8 max-w-3xl rounded-2xl border border-violet-400/30 bg-violet-500/10 p-5">
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white">MOD info</h2>
+          <ul class="mt-3 list-disc space-y-1 pl-5 text-sm text-slate-700 dark:text-slate-200">
+            {data.modFeatures.map((feature) => (
+              <li>{feature}</li>
+            ))}
+          </ul>
+        </aside>
+      )
+    }
+
+    <section class="mt-10 max-w-3xl" aria-labelledby="features-heading">
+      <h2 id="features-heading" class="mb-3 text-xl font-bold">Key features</h2>
+      <ul class="grid gap-2 sm:grid-cols-2">
+        {
+          data.modFeatures.concat(['Lightweight listing page', 'Verified version metadata']).slice(0, 6).map((item) => (
+            <li class="rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm dark:border-slate-800 dark:bg-ink-card">
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <div class="mt-10">
+      <Screenshots appName={data.appName} screenshots={data.screenshots} />
+    </div>
+
+    <div class="mt-10 max-w-3xl">
+      <FAQ items={faqs} />
+    </div>
+
+    <RelatedApps apps={related} />
+  </div>
+</BaseLayout>

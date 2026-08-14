@@ -1,0 +1,25 @@
+---
+import AppCard from './AppCard.astro';
+import type { ApkEntry } from '../lib/apk';
+
+interface Props {
+  apps: ApkEntry[];
+}
+
+const { apps } = Astro.props;
+---
+
+{
+  apps.length > 0 && (
+    <section aria-labelledby="related-heading" class="mt-12">
+      <h2 id="related-heading" class="mb-5 text-xl font-bold text-slate-900 dark:text-white">
+        Related apps
+      </h2>
+      <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {apps.map((app) => (
+          <AppCard app={app} />
+        ))}
+      </div>
+    </section>
+  )
+}

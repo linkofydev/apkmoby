@@ -1,0 +1,53 @@
+---
+import OptimizedImage from './OptimizedImage.astro';
+import { formatDownloads } from '../lib/apk';
+import { categorySlug } from '../config';
+import type { ApkEntry } from '../lib/apk';
+
+interface Props {
+  app: ApkEntry;
+}
+
+const { app } = Astro.props;
+const { data } = app;
+---
+
+<article
+  class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-400/60 hover:shadow-glow dark:border-slate-800 dark:bg-ink-card"
+>
+  <a href={`/${data.slug}`} class="block overflow-hidden">
+    <OptimizedImage
+      src={data.featuredImage}
+      alt={`${data.appName} cover`}
+      width={640}
+      height={360}
+      class="h-40 w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+    />
+  </a>
+  <div class="flex flex-1 flex-col gap-3 p-4">
+    <div class="flex items-start gap-3">
+      <OptimizedImage
+        src={data.icon}
+        alt={`${data.appName} icon`}
+        width={48}
+        height={48}
+        class="h-12 w-12 rounded-xl border border-slate-200 dark:border-slate-700"
+      />
+      <div class="min-w-0">
+        <h3 class="truncate font-semibold text-slate-900 dark:text-white">
+          <a href={`/${data.slug}`}>{data.appName}</a>
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400">
+          <a href={`/category/${categorySlug(data.category)}`} class="hover:text-cyan-500">{data.category}</a>
+          · v{data.version}
+        </p>
+      </div>
+    </div>
+    <p class="line-clamp-2 text-sm text-slate-600 dark:text-slate-400">{data.metaDescription}</p>
+    <div class="mt-auto flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+      <span>★ {data.ratingValue.toFixed(1)}</span>
+      <span>{formatDownloads(data.totalDownloads)} downloads</span>
+      <span>{data.size}</span>
+    </div>
+  </div>
+</article>

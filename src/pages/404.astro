@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Page not found" description="The page you requested does not exist." canonical="/404" noindex>
+  <div class="mx-auto max-w-lg px-4 py-24 text-center">
+    <p class="text-sm font-semibold uppercase tracking-widest text-cyan-600">404</p>
+    <h1 class="mt-2 text-3xl font-extrabold">Page not found</h1>
+    <p class="mt-3 text-slate-600 dark:text-slate-400">That APK listing may have moved. Head back to the homepage.</p>
+    <a href="/" class="mt-6 inline-flex rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Go home</a>
+  </div>
+</BaseLayout>

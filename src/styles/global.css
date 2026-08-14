@@ -1,0 +1,85 @@
+@import "tailwindcss";
+@source "../**/*.{astro,html,js,ts,md}";
+@config "../../tailwind.config.mjs";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  color-scheme: dark;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 3px;
+}
+
+.prose-apk :where(h2) {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prose-apk :where(h3) {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.prose-apk :where(p) {
+  margin-bottom: 0.9rem;
+  line-height: 1.7;
+}
+
+.prose-apk :where(ul) {
+  margin: 0.75rem 0 1rem;
+  padding-left: 1.2rem;
+  list-style: disc;
+}
+
+.prose-apk :where(li) {
+  margin-bottom: 0.35rem;
+  line-height: 1.6;
+}
+
+.prose-apk :where(a) {
+  color: #0891b2;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.dark .prose-apk :where(a) {
+  color: #67e8f9;
+}
+
+.shot-track {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shot-track > * {
+  scroll-snap-align: start;
+}

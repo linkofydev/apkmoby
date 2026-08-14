@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+---
+
+<BaseLayout
+  title="DMCA"
+  description={`Copyright and DMCA takedown information for ${SITE.name}.`}
+  canonical="/dmca"
+>
+  <div class="prose-apk mx-auto max-w-3xl px-4 py-12">
+    <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">DMCA / Copyright</h1>
+    <p class="mt-4 text-slate-600 dark:text-slate-300">
+      {SITE.name} respects intellectual property. If you believe a listing infringes your copyright, email
+      <a href={`mailto:${SITE.email}`}>{SITE.email}</a> with: your contact details, the work claimed, the
+      URL of the listing, a statement of good faith, and your signature.
+    </p>
+    <p class="text-slate-600 dark:text-slate-300">
+      We will review valid notices and remove or update listings as required.
+    </p>
+  </div>
+</BaseLayout>

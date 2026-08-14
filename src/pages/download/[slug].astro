@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import DownloadTimer from '../../components/DownloadTimer.astro';
+import OptimizedImage from '../../components/OptimizedImage.astro';
+import { getApks } from '../../lib/apk';
+import { categorySlug } from '../../config';
+
+export async function getStaticPaths() {
+  const apps = await getApks();
+  return apps.map((app) => ({
+    params: { slug: app.data.slug },
+    props: { app },
+  }));
+}
+
+const { app } = Astro.props;
+const { data } = app;
+const catSlug = categorySlug(data.category);
+---
+
+<BaseLayout
+  title={`Download ${data.appName} ${data.version} APK`}
+  description={`Download ${data.appName} ${data.version} (${data.size}) for Android ${data.reqAndroid}. Wait for the timer, then grab the verified APK.`}
+  canonical={`/download/${data.slug}`}
+  image={data.featuredImage}
+  type="article"
+>
+  <div class="mx-auto max-w-3xl px-4 py-8">
+    <Breadcrumbs
+      items={[
+        { label: 'Home', href: '/' },
+        { label: data.category, href: `/category/${catSlug}` },
+        { label: data.appName, href: `/${data.slug}` },
+        { label: 'Download' },
+      ]}
+    />
+
+    <div class="mb-8 flex items-center gap-4">
+      <OptimizedImage
+        src={data.icon}
+        alt={`${data.appName} icon`}
+        width={72}
+        height={72}
+        loading="eager"
+        fetchpriority="high"
+        class="h-[72px] w-[72px] rounded-2xl border border-slate-200 dark:border-slate-700"
+      />
+      <div>
+        <h1 class="text-2xl font-extrabold text-slate-900 dark:text-white">
+          Download {data.appName}
+        </h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400">
+          v{data.version} · {data.size} · Android {data.reqAndroid}
+        </p>
+      </div>
+    </div>
+
+    <DownloadTimer downloadUrl={data.downloadUrl} appName={data.appName} />
+
+    <aside class="mt-6 flex items-start gap-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4 text-sm text-emerald-800 dark:text-emerald-200">
+      <svg class="mt-0.5 h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        <path d="m9 12 2 2 4-4"></path>
+      </svg>
+      <p>
+        <strong>Security badge:</strong> This listing is marked antivirus-verified in the template.
+        Always scan APKs with Play Protect or your preferred scanner before installing.
+      </p>
+    </aside>
+
+    <section class="mt-10" aria-labelledby="install-heading">
+      <h2 id="install-heading" class="text-xl font-bold">How to install APKs on Android</h2>
+      <ol class="mt-4 space-y-4">
+        <li class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-ink-card">
+          <p class="font-semibold">1. Wait for the timer</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            The download button appears after five seconds so you can confirm version and file size.
+          </p>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-ink-card">
+          <p class="font-semibold">2. Save the APK</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Tap the download button. Chrome or your browser will save the file to Downloads.
+          </p>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-ink-card">
+          <p class="font-semibold">3. Allow unknown sources</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Settings → Apps → Special app access → Install unknown apps → enable for your browser.
+          </p>
+        </li>
+        <li class="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-ink-card">
+          <p class="font-semibold">4. Install and open</p>
+          <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">
+            Open the downloaded file, tap Install, then Open. You can disable unknown sources afterwards.
+          </p>
+        </li>
+      </ol>
+    </section>
+
+    <p class="mt-8 text-center text-sm">
+      <a href={`/${data.slug}`} class="font-medium text-cyan-700 hover:underline dark:text-cyan-300">
+        ← Back to {data.appName} details
+      </a>
+    </p>
+  </div>
+</BaseLayout>

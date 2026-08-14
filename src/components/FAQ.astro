@@ -1,0 +1,48 @@
+---
+interface Item {
+  q: string;
+  a: string;
+}
+
+interface Props {
+  items: Item[];
+}
+
+const { items } = Astro.props;
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: item.a,
+    },
+  })),
+};
+---
+
+<section aria-labelledby="faq-heading">
+  <h2 id="faq-heading" class="mb-4 text-xl font-bold text-slate-900 dark:text-white">FAQ</h2>
+  <div class="space-y-3">
+    {
+      items.map((item) => (
+        <details class="group rounded-xl border border-slate-200 bg-white open:border-cyan-400/50 dark:border-slate-800 dark:bg-ink-card">
+          <summary class="cursor-pointer list-none px-4 py-3 font-medium text-slate-800 marker:content-none dark:text-slate-100 [&::-webkit-details-marker]:hidden">
+            <span class="flex items-center justify-between gap-3">
+              {item.q}
+              <span class="text-cyan-500 transition group-open:rotate-45" aria-hidden="true">+</span>
+            </span>
+          </summary>
+          <p class="border-t border-slate-100 px-4 py-3 text-sm leading-6 text-slate-600 dark:border-slate-800 dark:text-slate-300">
+            {item.a}
+          </p>
+        </details>
+      ))
+    }
+  </div>
+</section>
+
+<script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />

@@ -1,0 +1,82 @@
+---
+import { SITE } from '../config';
+
+interface Props {
+  downloadUrl: string;
+  appName: string;
+  seconds?: number;
+}
+
+const { downloadUrl, appName, seconds = SITE.downloadTimerSeconds } = Astro.props;
+---
+
+<div
+  id="download-widget"
+  class="rounded-2xl border border-cyan-400/30 bg-white p-6 text-center shadow-glow dark:bg-ink-card"
+  data-url={downloadUrl}
+  data-seconds={seconds}
+>
+  <p class="text-sm font-medium uppercase tracking-wide text-emerald-600 dark:text-emerald-400">
+    Antivirus verified · Safe listing
+  </p>
+  <h2 class="mt-2 text-2xl font-bold text-slate-900 dark:text-white">Preparing your download</h2>
+  <p id="timer-status" class="mt-3 text-slate-600 dark:text-slate-300" aria-live="polite">
+    Your link will appear in <strong id="countdown">{seconds}</strong> seconds.
+  </p>
+  <div
+    class="mx-auto mt-4 h-2 w-full max-w-xs overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800"
+    role="progressbar"
+    aria-valuemin="0"
+    aria-valuemax={seconds}
+    aria-valuenow={seconds}
+    id="timer-bar-wrap"
+  >
+    <div id="timer-bar" class="h-full w-full origin-left bg-linear-to-r from-cyan-400 to-violet-500"></div>
+  </div>
+  <a
+    id="final-download"
+    href={downloadUrl}
+    rel="nofollow noopener"
+    class="mt-6 hidden items-center justify-center rounded-xl bg-linear-to-r from-cyan-400 to-violet-500 px-6 py-3 text-base font-bold text-ink shadow-glow"
+    download
+  >
+    Download {appName} APK
+  </a>
+  <noscript>
+    <p class="mt-4 text-sm">JavaScript is off — use the direct link below.</p>
+    <a class="mt-2 inline-block font-semibold text-cyan-600 underline" href={downloadUrl} rel="nofollow noopener">
+      Download {appName} APK
+    </a>
+  </noscript>
+</div>
+
+<script is:inline>
+  (function () {
+    var root = document.getElementById('download-widget');
+    if (!root) return;
+    var seconds = parseInt(root.getAttribute('data-seconds') || '5', 10);
+    var remaining = seconds;
+    var status = document.getElementById('timer-status');
+    var count = document.getElementById('countdown');
+    var bar = document.getElementById('timer-bar');
+    var wrap = document.getElementById('timer-bar-wrap');
+    var link = document.getElementById('final-download');
+    var tick = function () {
+      remaining -= 1;
+      if (count) count.textContent = String(Math.max(remaining, 0));
+      if (wrap) wrap.setAttribute('aria-valuenow', String(Math.max(remaining, 0)));
+      if (bar) bar.style.transform = 'scaleX(' + Math.max(remaining, 0) / seconds + ')';
+      if (remaining <= 0) {
+        if (status) status.textContent = 'Your download is ready.';
+        if (link) {
+          link.classList.remove('hidden');
+          link.classList.add('inline-flex');
+        }
+        return;
+      }
+      setTimeout(tick, 1000);
+    };
+    if (bar) bar.style.transition = 'transform 1s linear';
+    setTimeout(tick, 1000);
+  })();
+</script>

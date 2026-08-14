@@ -1,43 +1,32 @@
-# Astro Starter Kit: Minimal
+# Apk Moby
+
+Live site: [https://apkmoby.com](https://apkmoby.com)
+
+Android MOD APK listings built with Astro 7 + Tailwind CSS v4 for Cloudflare Pages.
+
+## Local
 
 ```sh
-npm create astro@latest -- --template minimal
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Cloudflare Pages deploy
 
-## 🚀 Project Structure
+| Setting | Value |
+| --- | --- |
+| Framework | Astro |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Node version | `22` |
 
-Inside of your Astro project, you'll see the following folders and files:
+Environment variables:
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
-```
+- `PUBLIC_SITE_URL` = `https://apkmoby.com`
+- `INDEXNOW_KEY` = `7f3c9a1e8b4d2f6a0c5e9b1d3f7a2c4e`
+- `INDEXNOW_ENABLED` = `true` after DNS is live
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+Custom domain: `apkmoby.com` (and `www.apkmoby.com` → apex).
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+CMS: update `repo` in `public/admin/config.yml` to your GitHub repo, then open `/admin/`.

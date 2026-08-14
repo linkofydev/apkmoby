@@ -1,0 +1,22 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SITE } from '../config';
+---
+
+<BaseLayout
+  title="About"
+  description={`About ${SITE.name}: download Android MOD APKs with verified listings, screenshots, and a fast two-step download on apkmoby.com.`}
+  canonical="/about"
+>
+  <div class="prose-apk mx-auto max-w-3xl px-4 py-12">
+    <h1 class="text-3xl font-extrabold text-slate-900 dark:text-white">About {SITE.name}</h1>
+    <p class="mt-4 text-slate-600 dark:text-slate-300">
+      {SITE.name} ({SITE.url.replace('https://', '')}) helps Android users find MOD APKs with clear version
+      numbers, file size, screenshots, and a two-step download page so you can confirm details before installing.
+    </p>
+    <p class="text-slate-600 dark:text-slate-300">
+      We list games, tools, and lifestyle apps. Always scan downloaded files with Play Protect and only
+      install packages you trust. For copyright issues, see our <a href="/dmca">DMCA page</a>.
+    </p>
+  </div>
+</BaseLayout>

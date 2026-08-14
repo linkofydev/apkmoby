@@ -1,0 +1,51 @@
+---
+import { absoluteUrl, applicationCategory } from '../config';
+import type { ApkEntry } from '../lib/apk';
+
+interface Props {
+  app: ApkEntry;
+}
+
+const { app } = Astro.props;
+const { data } = app;
+const url = absoluteUrl(`/${data.slug}`);
+
+const schema = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: data.appName,
+  description: data.metaDescription,
+  url,
+  image: absoluteUrl(data.featuredImage),
+  screenshot: data.screenshots.map((src) => absoluteUrl(src)),
+  operatingSystem: 'Android',
+  applicationCategory: applicationCategory(data.category),
+  applicationSubCategory: data.category,
+  softwareVersion: data.version,
+  fileSize: data.size,
+  softwareRequirements: `Android ${data.reqAndroid}`,
+  downloadUrl: absoluteUrl(`/download/${data.slug}`),
+  installUrl: absoluteUrl(`/download/${data.slug}`),
+  datePublished: data.publishDate.toISOString(),
+  dateModified: data.updatedDate.toISOString(),
+  author: {
+    '@type': 'Organization',
+    name: data.developer,
+  },
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+  },
+  aggregateRating: {
+    '@type': 'AggregateRating',
+    ratingValue: data.ratingValue,
+    ratingCount: data.ratingCount,
+    bestRating: 5,
+    worstRating: 1,
+  },
+};
+---
+
+<script is:inline type="application/ld+json" set:html={JSON.stringify(schema)} />
