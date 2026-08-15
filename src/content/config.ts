@@ -55,6 +55,12 @@ const apk = defineCollection({
     updatedDate: z.coerce.date(),
     featuredImage: z.coerce.string(),
     screenshots: stringList,
+    draft: z.preprocess((value) => {
+      if (value == null || value === '') return false;
+      if (typeof value === 'boolean') return value;
+      if (typeof value === 'string') return value.trim().toLowerCase() === 'true' || value.trim() === '1';
+      return Boolean(value);
+    }, z.boolean()).default(false),
   }),
 });
 

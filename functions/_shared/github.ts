@@ -29,6 +29,7 @@ export interface ApkPayload {
   featuredImage: string;
   screenshots: string[];
   body: string;
+  draft?: boolean;
 }
 
 function yamlEscape(value: string | number | boolean | null | undefined): string {
@@ -48,6 +49,7 @@ export function toMarkdown(data: ApkPayload): string {
   const faqs = (data.faqs || [])
     .map((item) => ({ q: String(item?.q || '').trim(), a: String(item?.a || '').trim() }))
     .filter((item) => item.q && item.a);
+  const isDraft = !!data.draft;
   const lines = [
     '---',
     `title: ${yamlEscape(data.title)}`,
@@ -73,6 +75,7 @@ export function toMarkdown(data: ApkPayload): string {
     `publishDate: ${yamlEscape(data.publishDate)}`,
     `updatedDate: ${yamlEscape(data.updatedDate)}`,
     `featuredImage: ${yamlEscape(data.featuredImage)}`,
+    `draft: ${isDraft ? 'true' : 'false'}`,
     ...yamlList('screenshots', shots),
     '---',
     '',
@@ -130,6 +133,8 @@ export function fromMarkdown(raw: string): ApkPayload {
       } catch {
         data[current] = value;
       }
+    } else if (value === 'true' || value === 'false') {
+      data[current] = value === 'true';
     } else if (/^\d+(\.\d+)?$/.test(value)) {
       data[current] = Number(value);
     } else {
@@ -175,6 +180,7 @@ export function fromMarkdown(raw: string): ApkPayload {
     featuredImage: String(data.featuredImage || ''),
     screenshots: lists.screenshots || [],
     body,
+    draft: data.draft === true || data.draft === 'true',
   };
 }
 
@@ -234,14 +240,21 @@ export async function getApp(env: GhEnv, slug: string) {
 }
 
 export async function saveApp(env: GhEnv, data: ApkPayload, sha?: string) {
-  const message = sha ? `cms: update ${data.slug}` : `cms: publish ${data.slug}`;
+  const prepared = applyDraftDefaults(data);
+  const message = prepared.draft
+    ? sha
+      ? `cms: draft update ${prepared.slug}`
+      : `cms: draft ${prepared.slug}`
+    : sha
+      ? `cms: update ${prepared.slug}`
+      : `cms: publish ${prepared.slug}`;
   const body = {
     message,
-    content: utf8ToBase64(toMarkdown(data)),
+    content: utf8ToBase64(toMarkdown(prepared)),
     branch: env.GITHUB_BRANCH || 'main',
     ...(sha ? { sha } : {}),
   };
-  const res = await gh(env, `/contents/${apkPath(data.slug)}`, {
+  const res = await gh(env, `/contents/${apkPath(prepared.slug)}`, {
     method: 'PUT',
     body: JSON.stringify(body),
   });
@@ -250,6 +263,45 @@ export async function saveApp(env: GhEnv, data: ApkPayload, sha?: string) {
     throw new Error(`GitHub save failed (${res.status}): ${err}`);
   }
   return res.json();
+}
+
+/** Fill required fields so incomplete drafts still pass the Astro content schema. */
+export function applyDraftDefaults(data: ApkPayload): ApkPayload {
+  const draft = !!data.draft;
+  if (!draft) {
+    return { ...data, draft: false };
+  }
+  const appName = String(data.appName || '').trim() || 'Untitled draft';
+  const slug = String(data.slug || '').trim() || 'untitled-draft';
+  const today = new Date().toISOString().slice(0, 10);
+  return {
+    ...data,
+    draft: true,
+    appName,
+    slug,
+    title: String(data.title || '').trim() || appName,
+    metaTitle: String(data.metaTitle || '').trim() || appName,
+    metaDescription:
+      String(data.metaDescription || '').trim() || 'Draft article — not published on the public site yet.',
+    icon: String(data.icon || '').trim() || '/favicon.svg',
+    category: String(data.category || '').trim() || 'Games',
+    version: String(data.version || '').trim() || '0',
+    size: String(data.size || '').trim() || '0 MB',
+    developer: String(data.developer || '').trim() || 'TBD',
+    packageName: String(data.packageName || '').trim() || 'com.example.draft',
+    reqAndroid: String(data.reqAndroid || '').trim() || '5.0+',
+    totalDownloads: data.totalDownloads === '' || data.totalDownloads == null ? '0' : data.totalDownloads,
+    ratingValue: Number(data.ratingValue) > 0 ? Number(data.ratingValue) : 4.5,
+    ratingCount: Number(data.ratingCount) || 0,
+    downloadUrl: String(data.downloadUrl || '').trim() || 'https://apkmoby.com/',
+    publishDate: String(data.publishDate || '').trim() || today,
+    updatedDate: String(data.updatedDate || '').trim() || today,
+    featuredImage: String(data.featuredImage || '').trim() || String(data.icon || '').trim() || '/images/hero-mod-1280.webp',
+    modFeatures: data.modFeatures || [],
+    screenshots: data.screenshots || [],
+    faqs: data.faqs || [],
+    body: data.body || '',
+  };
 }
 
 export async function deleteApp(env: GhEnv, slug: string, sha: string) {

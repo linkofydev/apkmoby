@@ -167,10 +167,12 @@ const categories = [...ADMIN_CATEGORIES];
             <p id="editor-error" class="hidden md:col-span-2 text-sm text-red-400"></p>
             <p id="editor-success" class="hidden md:col-span-2 text-sm text-emerald-300"></p>
             <div class="md:col-span-2 flex flex-wrap gap-3">
-              <button id="btn-save" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save / Publish</button>
+              <button id="btn-save" type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save / Publish</button>
+              <button id="btn-draft" type="button" class="rounded-xl border border-amber-400/40 px-5 py-2.5 text-sm font-semibold text-amber-200">Save Draft</button>
               <button id="btn-duplicate" type="button" class="rounded-xl border border-white/15 px-5 py-2.5 text-sm">Duplicate</button>
               <button id="btn-delete" type="button" class="rounded-xl border border-red-400/40 px-5 py-2.5 text-sm text-red-300">Delete</button>
             </div>
+            <p class="md:col-span-2 text-xs text-slate-500">Save Draft keeps incomplete work in the admin list (not live). Save / Publish makes it public on apkmoby.com.</p>
           </form>
         </section>
       </main>
@@ -574,6 +576,7 @@ const categories = [...ADMIN_CATEGORIES];
           featuredImage: '',
           screenshots: [],
           body: '',
+          draft: false,
           sha: '',
         };
       }
@@ -601,6 +604,7 @@ const categories = [...ADMIN_CATEGORIES];
         form.downloadUrl.value = p.downloadUrl || '';
         form.icon.value = p.icon || '';
         form.featuredImage.value = p.featuredImage || '';
+        form.dataset.draft = p.draft ? '1' : '0';
         const features = Array.isArray(p.modFeatures) ? p.modFeatures : [];
         setEditorContent('mod-html', p.modHtml || featuresToHtml(features));
         setShots(Array.isArray(p.screenshots) ? p.screenshots : []);
@@ -609,7 +613,7 @@ const categories = [...ADMIN_CATEGORIES];
         updateMediaPreviews();
       }
 
-      function readForm() {
+      function readForm(asDraft) {
         const slug = normalizeSlug(form.slug.value);
         const modHtml = getEditorContent('mod-html');
         return {
@@ -639,39 +643,51 @@ const categories = [...ADMIN_CATEGORIES];
           featuredImage: form.featuredImage.value || '',
           screenshots: shotList(),
           body: getEditorContent('body-html'),
+          draft: !!asDraft,
         };
       }
 
       function renderList(filter) {
         const q = (filter || '').toLowerCase();
-        const items = rows.filter((r) => (r.appName + r.category + r.slug).toLowerCase().includes(q));
+        const items = rows.filter((r) => (r.appName + r.category + r.slug + (r.draft ? ' draft' : '')).toLowerCase().includes(q));
         if (!items.length) {
           listEl.innerHTML = '<p class="p-6 text-sm text-slate-400">No listings yet. Click New APK.</p>';
           return;
         }
         listEl.innerHTML =
-          '<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">App</th><th>Category</th><th>Version</th><th>Updated</th><th></th></tr></thead><tbody>' +
+          '<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">App</th><th>Status</th><th>Category</th><th>Version</th><th>Updated</th><th></th></tr></thead><tbody>' +
           items
-            .map(
-              (r) =>
+            .map((r) => {
+              const status = r.draft
+                ? '<span class="rounded-full border border-amber-400/40 bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-200">Draft</span>'
+                : '<span class="rounded-full border border-emerald-400/40 bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-300">Published</span>';
+              const shareBtn = r.draft
+                ? ''
+                : '<button type="button" data-share-slug="' +
+                  r.slug +
+                  '" class="text-amber-300">Share</button>';
+              return (
                 '<tr class="border-t border-white/10"><td class="px-4 py-3 font-medium">' +
                 r.appName +
+                '</td><td class="px-4 py-3">' +
+                status +
                 '</td><td>' +
                 r.category +
                 '</td><td>' +
                 r.version +
                 '</td><td>' +
                 (r.updatedDate || '') +
-                '</td><td class="px-4 py-3 text-right whitespace-nowrap space-x-2"><button type="button" data-share-slug="' +
-                r.slug +
-                '" class="text-amber-300">Share</button><button type="button" data-edit="' +
+                '</td><td class="px-4 py-3 text-right whitespace-nowrap space-x-2">' +
+                shareBtn +
+                '<button type="button" data-edit="' +
                 r.slug +
                 '" class="text-cyan-300">Edit</button><button type="button" data-del="' +
                 r.slug +
                 '" data-sha="' +
                 r.sha +
-                '" class="text-red-300">Delete</button></td></tr>',
-            )
+                '" class="text-red-300">Delete</button></td></tr>'
+              );
+            })
             .join('') +
           '</tbody></table>';
       }
@@ -823,27 +839,45 @@ const categories = [...ADMIN_CATEGORIES];
         }
       });
 
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
+      async function persistArticle(asDraft) {
         setError('editor-error', '');
         const success = document.getElementById('editor-success');
         success.textContent = '';
         show(success, false);
         if (typeof tinymce !== 'undefined') tinymce.triggerSave();
-        const payload = readForm();
-        if (!payload.slug) return setError('editor-error', 'Slug is required');
-        if (!payload.icon) return setError('editor-error', 'Icon URL is required');
-        if (!payload.featuredImage) return setError('editor-error', 'Featured image URL is required');
+        const payload = readForm(asDraft);
+        if (!payload.slug && payload.appName) payload.slug = slugify(payload.appName);
+        if (!payload.slug) return setError('editor-error', 'Slug or app name is required');
+        if (!asDraft) {
+          if (!payload.appName?.trim()) return setError('editor-error', 'App name is required to publish');
+          if (!payload.title?.trim()) return setError('editor-error', 'Title is required to publish');
+          if (!payload.icon?.trim() || payload.icon === '/favicon.svg') {
+            return setError('editor-error', 'Real icon URL is required to publish (not the draft placeholder)');
+          }
+          if (!payload.featuredImage?.trim() || payload.featuredImage.includes('hero-mod-1280')) {
+            return setError('editor-error', 'Featured image URL is required to publish');
+          }
+          if (!payload.downloadUrl?.trim() || payload.downloadUrl === 'https://apkmoby.com/') {
+            return setError('editor-error', 'Download URL is required to publish');
+          }
+        }
         const saveBtn = document.getElementById('btn-save');
+        const draftBtn = document.getElementById('btn-draft');
         saveBtn.disabled = true;
-        saveBtn.textContent = 'Publishing…';
+        draftBtn.disabled = true;
+        saveBtn.textContent = asDraft ? 'Save / Publish' : 'Publishing…';
+        draftBtn.textContent = asDraft ? 'Saving draft…' : 'Save Draft';
         try {
-          if (mode === 'create') {
+          const exists = mode === 'edit' && currentSlug;
+          if (!exists) {
             await api('/api/admin/apps/' + payload.slug, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(payload),
             });
+            mode = 'edit';
+            currentSlug = payload.slug;
+            form.slug.dataset.locked = '1';
           } else {
             await api('/api/admin/apps/' + currentSlug, {
               method: 'PUT',
@@ -851,32 +885,58 @@ const categories = [...ADMIN_CATEGORIES];
               body: JSON.stringify(payload),
             });
           }
-          success.innerHTML =
-            'Published live. Open: <a class="underline text-cyan-300" target="_blank" rel="noopener" href="https://apkmoby.com/' +
-            payload.slug +
-            '">https://apkmoby.com/' +
-            payload.slug +
-            '</a> — wait ~30s then hard-refresh homepage (Ctrl/Cmd+Shift+R). Screenshots saved: ' +
-            payload.screenshots.length;
-          show(success, true);
-          window.open('https://apkmoby.com/' + payload.slug, '_blank', 'noopener');
-          await loadList();
-          setTimeout(() => {
-            show(editorPanel, false);
-            show(listPanel, true);
-          }, 4000);
+          form.dataset.draft = asDraft ? '1' : '0';
+          if (asDraft) {
+            success.textContent =
+              'Draft saved. You can close the panel and finish this article later from the list.';
+            show(success, true);
+            await loadList();
+            // Refresh sha so next save updates instead of conflicting
+            try {
+              const entry = await api('/api/admin/apps/' + payload.slug);
+              form.sha.value = entry.sha || '';
+              await fillForm({ ...entry.data, sha: entry.sha });
+            } catch {}
+          } else {
+            success.innerHTML =
+              'Published live. Open: <a class="underline text-cyan-300" target="_blank" rel="noopener" href="https://apkmoby.com/' +
+              payload.slug +
+              '">https://apkmoby.com/' +
+              payload.slug +
+              '</a> — wait ~30s then hard-refresh homepage (Ctrl/Cmd+Shift+R). Screenshots saved: ' +
+              payload.screenshots.length;
+            show(success, true);
+            window.open('https://apkmoby.com/' + payload.slug, '_blank', 'noopener');
+            await loadList();
+            setTimeout(() => {
+              show(editorPanel, false);
+              show(listPanel, true);
+            }, 4000);
+          }
         } catch (err) {
           setError('editor-error', err.message);
         } finally {
           saveBtn.disabled = false;
+          draftBtn.disabled = false;
           saveBtn.textContent = 'Save / Publish';
+          draftBtn.textContent = 'Save Draft';
         }
+      }
+
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await persistArticle(false);
+      });
+
+      document.getElementById('btn-draft').addEventListener('click', async () => {
+        await persistArticle(true);
       });
 
       document.getElementById('btn-duplicate').addEventListener('click', () => {
         form.sha.value = '';
         form.slug.value = (normalizeSlug(form.slug.value) || 'app') + '-copy';
         form.slug.dataset.locked = '1';
+        form.dataset.draft = '1';
         mode = 'create';
         currentSlug = '';
       });

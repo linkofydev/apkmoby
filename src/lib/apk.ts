@@ -6,9 +6,9 @@ export type ApkEntry = CollectionEntry<'apk'>;
 export async function getApks(): Promise<ApkEntry[]> {
   try {
     const apps = await getCollection('apk');
-    return apps.sort(
-      (a, b) => b.data.updatedDate.valueOf() - a.data.updatedDate.valueOf(),
-    );
+    return apps
+      .filter((app) => !app.data.draft)
+      .sort((a, b) => b.data.updatedDate.valueOf() - a.data.updatedDate.valueOf());
   } catch {
     return [];
   }

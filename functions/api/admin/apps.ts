@@ -22,6 +22,7 @@ export const onRequestGet: PagesFunction<CmsEnv> = async ({ request, env }) => {
           updatedDate: entry.data.updatedDate,
           icon: entry.data.icon,
           featuredImage: entry.data.featuredImage || entry.data.icon,
+          draft: !!entry.data.draft,
         });
       }
     }
