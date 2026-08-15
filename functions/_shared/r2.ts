@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import type { CmsEnv } from './auth';
 
 export type R2Env = CmsEnv & {
@@ -179,4 +179,81 @@ export async function streamRemoteApkToR2(
     etag: out.ETag,
     via: 's3-api',
   };
+}
+
+export type ApkFileRow = {
+  key: string;
+  fileName: string;
+  publicUrl: string;
+  size?: number;
+  uploaded?: string;
+};
+
+export async function listApkFiles(env: R2Env): Promise<ApkFileRow[]> {
+  if (env.APK_BUCKET) {
+    const out: ApkFileRow[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await env.APK_BUCKET.list({ prefix: 'apk/', cursor, limit: 1000 });
+      for (const obj of page.objects) {
+        if (!obj.key || obj.key.endsWith('/')) continue;
+        const fileName = obj.key.replace(/^apk\//, '');
+        if (!fileName.toLowerCase().endsWith('.apk')) continue;
+        out.push({
+          key: obj.key,
+          fileName,
+          publicUrl: publicApkUrl(env, fileName),
+          size: obj.size,
+          uploaded: obj.uploaded?.toISOString?.() || undefined,
+        });
+      }
+      cursor = page.truncated ? page.cursor : undefined;
+    } while (cursor);
+    out.sort((a, b) => String(b.uploaded || '').localeCompare(String(a.uploaded || '')) || a.fileName.localeCompare(b.fileName));
+    return out;
+  }
+
+  const { bucket } = requireS3Config(env);
+  const client = createR2S3Client(env);
+  const out: ApkFileRow[] = [];
+  let token: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: 'apk/',
+        ContinuationToken: token,
+        MaxKeys: 1000,
+      }),
+    );
+    for (const obj of page.Contents || []) {
+      const key = obj.Key || '';
+      if (!key || key.endsWith('/')) continue;
+      const fileName = key.replace(/^apk\//, '');
+      if (!fileName.toLowerCase().endsWith('.apk')) continue;
+      out.push({
+        key,
+        fileName,
+        publicUrl: publicApkUrl(env, fileName),
+        size: obj.Size,
+        uploaded: obj.LastModified?.toISOString(),
+      });
+    }
+    token = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (token);
+  out.sort((a, b) => String(b.uploaded || '').localeCompare(String(a.uploaded || '')) || a.fileName.localeCompare(b.fileName));
+  return out;
+}
+
+export async function deleteApkFile(env: R2Env, fileNameInput: string): Promise<{ key: string; fileName: string }> {
+  const fileName = sanitizeApkFileName(fileNameInput);
+  const key = `apk/${fileName}`;
+  if (env.APK_BUCKET) {
+    await env.APK_BUCKET.delete(key);
+    return { key, fileName };
+  }
+  const { bucket } = requireS3Config(env);
+  const client = createR2S3Client(env);
+  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  return { key, fileName };
 }

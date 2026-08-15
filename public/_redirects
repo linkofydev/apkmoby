@@ -3,6 +3,8 @@
 /admin/ /admin-panel/ 301
 /admin/articles /admin-panel/ 301
 /admin/articles/ /admin-panel/ 301
+/admin/apk-files /admin-panel/apk-files/ 301
+/admin/apk-files/ /admin-panel/apk-files/ 301
 /admin/social-settings /admin-panel/social-settings/ 301
 /admin/social-settings/ /admin-panel/social-settings/ 301
 /sitemap.xml /sitemap-index.xml 301

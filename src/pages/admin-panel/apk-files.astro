@@ -1,0 +1,291 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="APK Files · Admin">
+  <style is:global>
+    #login-view.hidden,
+    #app-view.hidden,
+    #r2-result.hidden {
+      display: none !important;
+    }
+  </style>
+
+  <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+    <h1 class="text-2xl font-extrabold">Publisher login</h1>
+    <p class="mt-2 text-sm text-slate-400">Private console. Not linked from the public site.</p>
+    <form id="login-form" class="mt-8 space-y-4">
+      <label class="block text-sm">
+        Email
+        <input name="email" type="email" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+      </label>
+      <label class="block text-sm">
+        Password
+        <input name="password" type="password" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+      </label>
+      <p id="login-error" class="hidden text-sm text-red-400"></p>
+      <button class="w-full rounded-xl bg-cyan-400 py-2.5 text-sm font-bold text-ink">Sign in</button>
+    </form>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <header class="sticky top-0 z-20 border-b border-white/10 bg-ink/90 backdrop-blur">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <p class="font-bold">Apk Moby · Admin</p>
+        <nav class="flex flex-wrap items-center gap-2 text-sm">
+          <a href="/admin-panel/" class="rounded-lg border border-white/15 px-3 py-1.5 text-slate-300 hover:text-white">Articles</a>
+          <a href="/admin-panel/apk-files/" class="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-cyan-300">APK Files</a>
+          <a href="/admin-panel/social-settings/" class="rounded-lg border border-white/15 px-3 py-1.5 text-slate-300 hover:text-white">Social Settings</a>
+          <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-6xl px-4 py-8">
+      <section class="mb-8 rounded-2xl border border-white/10 bg-ink-card/60 p-5">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-bold">Remote APK Manager</h2>
+            <p class="mt-1 text-sm text-slate-400">
+              Fetch a direct APK URL and stream it to Cloudflare R2. Public link:
+              <code class="text-cyan-300">https://dl.apkmoby.com/apk/&lt;filename&gt;</code>
+            </p>
+          </div>
+          <span id="r2-status" class="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">Idle</span>
+        </div>
+        <form id="remote-apk-form" class="grid gap-4 md:grid-cols-2">
+          <label class="text-sm md:col-span-2">
+            Source remote APK URL
+            <input id="r2-remote-url" name="remoteUrl" type="url" required placeholder="https://example.com/files/app.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+          </label>
+          <label class="text-sm md:col-span-2">
+            Target file slug / filename
+            <input id="r2-file-name" name="fileName" required placeholder="honista-mod-v13.0-x64.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+            <p class="mt-1 text-xs text-slate-500">Stored as <code class="text-slate-300">apk/&lt;filename&gt;</code>. Only <code class="text-slate-300">.apk</code> allowed.</p>
+          </label>
+          <div class="md:col-span-2 flex flex-wrap items-center gap-3">
+            <button id="btn-r2-upload" type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Fetch &amp; Upload to R2</button>
+            <p id="r2-message" class="text-sm text-slate-400"></p>
+          </div>
+          <div id="r2-result" class="hidden md:col-span-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+            <p class="text-sm font-medium text-emerald-200">Public download URL</p>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <input id="r2-public-url" readonly class="min-w-[16rem] flex-1 rounded-lg border border-white/10 bg-ink px-3 py-2 text-sm text-cyan-200" />
+              <button type="button" id="btn-r2-copy" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Copy Link</button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <section id="list-panel">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <h2 class="text-xl font-bold">Uploaded APK files</h2>
+          <input id="list-search" type="search" placeholder="Search…" class="w-56 rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" />
+        </div>
+        <div id="list" class="overflow-hidden rounded-2xl border border-white/10"></div>
+      </section>
+    </main>
+  </div>
+
+  <script is:inline>
+    const loginView = document.getElementById('login-view');
+    const appView = document.getElementById('app-view');
+    const listEl = document.getElementById('list');
+    const searchEl = document.getElementById('list-search');
+    const r2Status = document.getElementById('r2-status');
+    const r2Message = document.getElementById('r2-message');
+    const r2Result = document.getElementById('r2-result');
+    const r2PublicUrl = document.getElementById('r2-public-url');
+    let rows = [];
+
+    const show = (el, on) => el && el.classList.toggle('hidden', !on);
+    const setMsg = (id, msg) => {
+      const n = document.getElementById(id);
+      if (!n) return;
+      n.textContent = msg || '';
+      show(n, !!msg);
+    };
+
+    async function api(url, opts) {
+      const res = await fetch(url, { credentials: 'same-origin', ...opts });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function formatBytes(n) {
+      if (n == null || !Number.isFinite(Number(n))) return '—';
+      const v = Number(n);
+      if (v < 1024) return v + ' B';
+      if (v < 1024 * 1024) return (v / 1024).toFixed(1) + ' KB';
+      return (v / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    function setR2Status(label, tone) {
+      r2Status.textContent = label;
+      r2Status.className =
+        'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ' +
+        (tone === 'ok'
+          ? 'border-emerald-400/40 text-emerald-300'
+          : tone === 'err'
+            ? 'border-red-400/40 text-red-300'
+            : tone === 'busy'
+              ? 'border-cyan-400/40 text-cyan-300'
+              : 'border-white/15 text-slate-300');
+    }
+
+    function renderList(filter) {
+      const q = (filter || '').toLowerCase();
+      const items = rows.filter((r) => (r.fileName + ' ' + r.publicUrl).toLowerCase().includes(q));
+      if (!items.length) {
+        listEl.innerHTML = q
+          ? '<p class="p-6 text-sm text-slate-400">No matches.</p>'
+          : '<p class="p-6 text-sm text-slate-400">No APK files yet. Upload one above — download links will appear here.</p>';
+        return;
+      }
+      listEl.innerHTML =
+        '<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">File</th><th class="px-4 py-3">Size</th><th class="px-4 py-3">Download URL</th><th class="px-4 py-3"></th></tr></thead><tbody>' +
+        items
+          .map((r) => {
+            const url = escapeHtml(r.publicUrl);
+            const short = r.publicUrl.length > 52 ? escapeHtml(r.publicUrl.slice(0, 52)) + '…' : url;
+            return (
+              '<tr class="border-t border-white/10"><td class="px-4 py-3 font-medium">' +
+              escapeHtml(r.fileName) +
+              '</td><td class="px-4 py-3 text-slate-400">' +
+              formatBytes(r.size) +
+              '</td><td class="px-4 py-3"><a class="text-cyan-300 hover:underline break-all" href="' +
+              url +
+              '" target="_blank" rel="noopener noreferrer nofollow">' +
+              short +
+              '</a></td><td class="px-4 py-3 text-right whitespace-nowrap space-x-2">' +
+              '<button type="button" data-copy="' +
+              url +
+              '" class="text-amber-300">Copy</button>' +
+              '<button type="button" data-del="' +
+              escapeHtml(r.fileName) +
+              '" class="text-red-300">Delete</button></td></tr>'
+            );
+          })
+          .join('') +
+        '</tbody></table>';
+    }
+
+    async function loadList() {
+      const data = await api('/api/admin/apk-files');
+      rows = data.files || [];
+      renderList(searchEl.value);
+    }
+
+    document.getElementById('remote-apk-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const remoteUrl = document.getElementById('r2-remote-url').value.trim();
+      const fileName = document.getElementById('r2-file-name').value.trim();
+      const btn = document.getElementById('btn-r2-upload');
+      if (!remoteUrl || !fileName) return;
+      btn.disabled = true;
+      show(r2Result, false);
+      r2Message.textContent = '';
+      setR2Status('Downloading', 'busy');
+      r2Message.textContent = 'Fetching remote file and uploading to R2…';
+      setTimeout(() => setR2Status('Uploading', 'busy'), 400);
+      try {
+        const data = await api('/api/remote-upload-apk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remoteUrl, fileName }),
+        });
+        setR2Status('Success', 'ok');
+        r2Message.textContent =
+          'Uploaded as ' + data.key + (data.bytes ? ' (' + Math.round((data.bytes / 1024 / 1024) * 10) / 10 + ' MB)' : '');
+        r2PublicUrl.value = data.publicUrl;
+        show(r2Result, true);
+        await loadList();
+      } catch (err) {
+        setR2Status('Error', 'err');
+        r2Message.textContent = err.message || 'Upload failed';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById('btn-r2-copy').addEventListener('click', async () => {
+      const value = r2PublicUrl.value;
+      if (!value) return;
+      try {
+        await navigator.clipboard.writeText(value);
+        document.getElementById('btn-r2-copy').textContent = 'Copied';
+        setTimeout(() => {
+          document.getElementById('btn-r2-copy').textContent = 'Copy Link';
+        }, 1500);
+      } catch {
+        r2PublicUrl.select();
+        document.execCommand('copy');
+      }
+    });
+
+    searchEl.addEventListener('input', (e) => renderList(e.target.value));
+
+    listEl.addEventListener('click', async (e) => {
+      const copy = e.target.getAttribute('data-copy');
+      const del = e.target.getAttribute('data-del');
+      if (copy) {
+        try {
+          await navigator.clipboard.writeText(copy);
+          e.target.textContent = 'Copied';
+          setTimeout(() => {
+            e.target.textContent = 'Copy';
+          }, 1200);
+        } catch {}
+        return;
+      }
+      if (del) {
+        if (!confirm('Delete ' + del + ' from R2?')) return;
+        await api('/api/admin/apk-files?fileName=' + encodeURIComponent(del), { method: 'DELETE' });
+        await loadList();
+      }
+    });
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setMsg('login-error', '');
+      const fd = new FormData(e.target);
+      try {
+        await api('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+        });
+        show(loginView, false);
+        show(appView, true);
+        await loadList();
+      } catch (err) {
+        setMsg('login-error', err.message);
+      }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await api('/api/admin/logout', { method: 'POST' });
+      location.reload();
+    });
+
+    api('/api/admin/session')
+      .then(async () => {
+        show(loginView, false);
+        show(appView, true);
+        await loadList();
+      })
+      .catch(() => {
+        show(loginView, true);
+        show(appView, false);
+      });
+  </script>
+</AdminLayout>
