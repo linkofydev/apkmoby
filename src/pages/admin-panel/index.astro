@@ -53,6 +53,38 @@ const categories = [...ADMIN_CATEGORIES];
       </header>
 
       <main class="mx-auto max-w-6xl px-4 py-8">
+        <section id="remote-apk-panel" class="mb-8 rounded-2xl border border-white/10 bg-ink-card/60 p-5">
+          <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="text-xl font-bold">Remote APK Manager</h2>
+              <p class="mt-1 text-sm text-slate-400">Fetch a direct APK URL and stream it to Cloudflare R2. Public link: <code class="text-cyan-300">https://dl.apkmoby.com/apk/&lt;filename&gt;</code></p>
+            </div>
+            <span id="r2-status" class="rounded-full border border-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">Idle</span>
+          </div>
+          <form id="remote-apk-form" class="grid gap-4 md:grid-cols-2">
+            <label class="text-sm md:col-span-2">
+              Source remote APK URL
+              <input id="r2-remote-url" name="remoteUrl" type="url" required placeholder="https://example.com/files/app.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+            </label>
+            <label class="text-sm md:col-span-2">
+              Target file slug / filename
+              <input id="r2-file-name" name="fileName" required placeholder="honista-latest-version.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+              <p class="mt-1 text-xs text-slate-500">Stored as <code class="text-slate-300">apk/&lt;filename&gt;</code>. Only <code class="text-slate-300">.apk</code> allowed.</p>
+            </label>
+            <div class="md:col-span-2 flex flex-wrap items-center gap-3">
+              <button id="btn-r2-upload" type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Fetch &amp; Upload to R2</button>
+              <p id="r2-message" class="text-sm text-slate-400"></p>
+            </div>
+            <div id="r2-result" class="hidden md:col-span-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+              <p class="text-sm font-medium text-emerald-200">Public download URL</p>
+              <div class="mt-2 flex flex-wrap items-center gap-2">
+                <input id="r2-public-url" readonly class="min-w-[16rem] flex-1 rounded-lg border border-white/10 bg-ink px-3 py-2 text-sm text-cyan-200" />
+                <button type="button" id="btn-r2-copy" class="rounded-lg border border-white/15 px-3 py-2 text-sm">Copy Link</button>
+              </div>
+            </div>
+          </form>
+        </section>
+
         <section id="list-panel">
           <div class="mb-4 flex items-center justify-between gap-3">
             <h2 class="text-xl font-bold">All listings</h2>
@@ -616,6 +648,70 @@ const categories = [...ADMIN_CATEGORIES];
         await api('/api/admin/logout', { method: 'POST' });
         location.reload();
       });
+
+      const r2Status = document.getElementById('r2-status');
+      const r2Message = document.getElementById('r2-message');
+      const r2Result = document.getElementById('r2-result');
+      const r2PublicUrl = document.getElementById('r2-public-url');
+      const setR2Status = (label, tone) => {
+        r2Status.textContent = label;
+        r2Status.className =
+          'rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide ' +
+          (tone === 'ok'
+            ? 'border-emerald-400/40 text-emerald-300'
+            : tone === 'err'
+              ? 'border-red-400/40 text-red-300'
+              : tone === 'busy'
+                ? 'border-cyan-400/40 text-cyan-300'
+                : 'border-white/15 text-slate-300');
+      };
+
+      document.getElementById('remote-apk-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const remoteUrl = document.getElementById('r2-remote-url').value.trim();
+        const fileName = document.getElementById('r2-file-name').value.trim();
+        const btn = document.getElementById('btn-r2-upload');
+        if (!remoteUrl || !fileName) return;
+        btn.disabled = true;
+        show(r2Result, false);
+        r2Message.textContent = '';
+        setR2Status('Downloading', 'busy');
+        r2Message.textContent = 'Fetching remote file and uploading to R2…';
+        // Brief UI beat so status is visible before the long request
+        setTimeout(() => setR2Status('Uploading', 'busy'), 400);
+        try {
+          const data = await api('/api/remote-upload-apk', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ remoteUrl, fileName }),
+          });
+          setR2Status('Success', 'ok');
+          r2Message.textContent = 'Uploaded as ' + data.key + (data.bytes ? ' (' + Math.round(data.bytes / 1024 / 1024 * 10) / 10 + ' MB)' : '');
+          r2PublicUrl.value = data.publicUrl;
+          show(r2Result, true);
+        } catch (err) {
+          setR2Status('Error', 'err');
+          r2Message.textContent = err.message || 'Upload failed';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      document.getElementById('btn-r2-copy').addEventListener('click', async () => {
+        const value = r2PublicUrl.value;
+        if (!value) return;
+        try {
+          await navigator.clipboard.writeText(value);
+          document.getElementById('btn-r2-copy').textContent = 'Copied';
+          setTimeout(() => {
+            document.getElementById('btn-r2-copy').textContent = 'Copy Link';
+          }, 1500);
+        } catch {
+          r2PublicUrl.select();
+          document.execCommand('copy');
+        }
+      });
+
       document.getElementById('btn-new').addEventListener('click', async () => {
         currentSlug = '';
         delete form.slug.dataset.locked;

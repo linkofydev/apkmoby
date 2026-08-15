@@ -6,6 +6,12 @@ export interface CmsEnv {
   GITHUB_TOKEN: string;
   GITHUB_REPO: string;
   GITHUB_BRANCH?: string;
+  CLOUDFLARE_R2_ACCOUNT_ID?: string;
+  CLOUDFLARE_R2_ACCESS_KEY_ID?: string;
+  CLOUDFLARE_R2_SECRET_ACCESS_KEY?: string;
+  CLOUDFLARE_R2_BUCKET_NAME?: string;
+  DOWNLOAD_DOMAIN?: string;
+  APK_BUCKET?: R2Bucket;
 }
 
 const COOKIE = 'moby_admin';

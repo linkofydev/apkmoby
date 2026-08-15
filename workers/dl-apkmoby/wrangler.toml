@@ -1,0 +1,12 @@
+name = "dl-apkmoby"
+main = "src/index.ts"
+compatibility_date = "2026-08-14"
+workers_dev = true
+
+# After deploy, attach custom domain dl.apkmoby.com in Cloudflare dashboard
+# (Workers → dl-apkmoby → Triggers → Custom Domains).
+
+[[r2_buckets]]
+binding = "APK_BUCKET"
+bucket_name = "apkmoby-files"
+preview_bucket_name = "apkmoby-files"

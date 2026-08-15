@@ -2,8 +2,21 @@
 name = "apkmoby"
 pages_build_output_dir = "dist"
 compatibility_date = "2026-08-14"
+# Needed for @aws-sdk/client-s3 streaming uploads in Pages Functions
+compatibility_flags = ["nodejs_compat"]
 
 [vars]
 ADMIN_EMAIL = "ali.niamat.nazir@gmail.com"
 GITHUB_REPO = "linkofydev/apkmoby"
 GITHUB_BRANCH = "main"
+DOWNLOAD_DOMAIN = "https://dl.apkmoby.com"
+CLOUDFLARE_R2_BUCKET_NAME = "apkmoby-files"
+# Optional S3-compatible fallback (encrypted secrets in Pages dashboard):
+# CLOUDFLARE_R2_ACCOUNT_ID
+# CLOUDFLARE_R2_ACCESS_KEY_ID
+# CLOUDFLARE_R2_SECRET_ACCESS_KEY
+
+# Native R2 binding — preferred streaming path for /api/remote-upload-apk
+[[r2_buckets]]
+binding = "APK_BUCKET"
+bucket_name = "apkmoby-files"
