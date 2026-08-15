@@ -7,6 +7,10 @@ import { getApks, splitGamesAndApps } from '../lib/apk';
 const apps = await getApks();
 const { games, appsOnly } = splitGamesAndApps(apps);
 const total = apps.length;
+/** Homepage shelves stay short so LCP/TBT stay green even with 1000+ listings. */
+const HOME_SHELF_LIMIT = 8;
+const latestGames = games.slice(0, HOME_SHELF_LIMIT);
+const latestApps = appsOnly.slice(0, HOME_SHELF_LIMIT);
 
 const websiteSchema = {
   '@context': 'https://schema.org',
@@ -34,23 +38,39 @@ const orgSchema = {
   title={`${SITE.name} — ${SITE.tagline}`}
   description={SITE.description}
   canonical="/"
-  image="/images/hero-mod.jpg"
+  image="/images/hero-mod-1280.webp"
 >
   <Fragment slot="head">
+    <link
+      rel="preload"
+      as="image"
+      type="image/webp"
+      href="/images/hero-mod-640.webp"
+      imagesrcset="/images/hero-mod-640.webp 640w, /images/hero-mod-960.webp 960w, /images/hero-mod-1280.webp 1280w"
+      imagesizes="100vw"
+      fetchpriority="high"
+    />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteSchema)} />
     <script is:inline type="application/ld+json" set:html={JSON.stringify(orgSchema)} />
   </Fragment>
 
   <section class="relative isolate overflow-hidden border-b border-slate-200">
-    <img
-      src="/images/hero-mod.jpg"
-      alt=""
-      width={1920}
-      height={1080}
-      fetchpriority="high"
-      decoding="async"
-      class="absolute inset-0 h-full w-full object-cover"
-    />
+    <picture>
+      <source
+        type="image/webp"
+        srcset="/images/hero-mod-640.webp 640w, /images/hero-mod-960.webp 960w, /images/hero-mod-1280.webp 1280w"
+        sizes="100vw"
+      />
+      <img
+        src="/images/hero-mod-960.jpg"
+        alt=""
+        width={960}
+        height={640}
+        fetchpriority="high"
+        decoding="sync"
+        class="absolute inset-0 h-full w-full object-cover"
+      />
+    </picture>
     <div class="absolute inset-0 bg-white/78"></div>
     <div class="absolute inset-0 bg-linear-to-r from-white via-white/90 to-cyan-50/40"></div>
     <div class="relative mx-auto flex max-w-6xl flex-col gap-4 px-4 py-12 sm:flex-row sm:items-end sm:justify-between sm:py-16">
@@ -89,8 +109,8 @@ const orgSchema = {
       {
         total > 0 ? (
           <>
-            <HomeShelf title="Latest Games" moreHref="/games" apps={games} icon="games" />
-            <HomeShelf title="Latest Apps" moreHref="/apps" apps={appsOnly} icon="apps" />
+            <HomeShelf title="Latest Games" moreHref="/games" moreLabel="More games" apps={latestGames} icon="games" />
+            <HomeShelf title="Latest Apps" moreHref="/apps" moreLabel="More apps" apps={latestApps} icon="apps" />
           </>
         ) : (
           <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center">

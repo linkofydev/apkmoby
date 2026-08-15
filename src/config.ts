@@ -7,7 +7,7 @@ export const SITE = {
   locale: 'en_US',
   lang: 'en',
   twitter: '@apkmoby',
-    defaultOgImage: '/images/hero-mod.jpg',
+    defaultOgImage: '/images/hero-mod-1280.webp',
   author: 'Apk Moby',
   email: 'dmca@apkmoby.com',
   indexNowKey:
