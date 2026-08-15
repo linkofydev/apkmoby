@@ -1,8 +1,36 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+
+const platforms = [
+  'Facebook',
+  'Twitter / X',
+  'Instagram',
+  'Telegram',
+  'WhatsApp',
+  'YouTube',
+  'TikTok',
+  'LinkedIn',
+  'Pinterest',
+  'Reddit',
+  'Discord',
+  'Threads',
+  'Snapchat',
+  'Tumblr',
+  'VK',
+  'Medium',
+  'GitHub',
+  'Other',
+];
 ---
 
 <AdminLayout title="Social Settings · Admin">
+  <style is:global>
+    #login-view.hidden,
+    #app-view.hidden {
+      display: none !important;
+    }
+  </style>
+
   <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
     <h1 class="text-2xl font-extrabold">Publisher login</h1>
     <p class="mt-2 text-sm text-slate-400">Social Settings is private. Not linked from the public site.</p>
@@ -34,50 +62,74 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
 
     <main class="mx-auto max-w-3xl px-4 py-8">
       <h1 class="text-2xl font-extrabold">Social Settings</h1>
-      <p class="mt-2 text-sm text-slate-400">
-        Store your profile / channel links for quick reference. Saved in this browser (localStorage). Internal only — never indexed.
+      <p class="mt-2 max-w-xl text-sm leading-6 text-slate-400">
+        Add only the platforms you use. Pick a network, paste your page/channel link, then save. Links stay on this page only (not on the articles dashboard).
       </p>
 
-      <form id="social-form" class="mt-8 grid gap-4">
-        <label class="text-sm">
-          Facebook Page URL
-          <input name="facebook" type="url" placeholder="https://facebook.com/yourpage" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <label class="text-sm">
-          Twitter / X Profile URL
-          <input name="twitter" type="url" placeholder="https://x.com/yourhandle" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <label class="text-sm">
-          Telegram Channel Link
-          <input name="telegram" type="url" placeholder="https://t.me/yourchannel" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <label class="text-sm">
-          WhatsApp Group / Channel Link
-          <input name="whatsapp" type="url" placeholder="https://chat.whatsapp.com/..." class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <label class="text-sm">
-          LinkedIn Page URL
-          <input name="linkedin" type="url" placeholder="https://linkedin.com/company/..." class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <label class="text-sm">
-          Pinterest Profile URL
-          <input name="pinterest" type="url" placeholder="https://pinterest.com/yourprofile" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
-        </label>
-        <p id="social-msg" class="hidden text-sm text-emerald-300"></p>
-        <p id="social-err" class="hidden text-sm text-red-400"></p>
-        <button type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save Settings</button>
-      </form>
+      <section class="mt-8 rounded-2xl border border-white/10 bg-ink-card/60 p-5">
+        <h2 class="text-lg font-bold" id="form-heading">Add social link</h2>
+        <form id="social-form" class="mt-4 space-y-4">
+          <input type="hidden" id="edit-id" value="" />
+          <label class="block text-sm">
+            Platform
+            <select id="platform" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5">
+              <option value="">Select platform…</option>
+              {platforms.map((p) => <option value={p}>{p}</option>)}
+            </select>
+          </label>
+          <label id="custom-platform-wrap" class="hidden block text-sm">
+            Custom platform name
+            <input id="custom-platform" type="text" placeholder="e.g. Quora, Mastodon, Line" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5" />
+          </label>
+          <label class="block text-sm">
+            Page / channel URL
+            <input id="url" type="url" required placeholder="https://…" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5" />
+          </label>
+          <div class="flex flex-wrap gap-2">
+            <button type="submit" id="btn-save-link" class="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">
+              <span aria-hidden="true">+</span>
+              <span id="btn-save-label">Add link</span>
+            </button>
+            <button type="button" id="btn-cancel-edit" class="hidden rounded-xl border border-white/15 px-5 py-2.5 text-sm">Cancel edit</button>
+          </div>
+          <p id="social-msg" class="hidden text-sm text-emerald-300"></p>
+          <p id="social-err" class="hidden text-sm text-red-400"></p>
+        </form>
+      </section>
+
+      <section class="mt-8">
+        <div class="mb-3 flex items-center justify-between gap-3">
+          <h2 class="text-lg font-bold">Saved profiles</h2>
+          <span id="link-count" class="text-xs text-slate-500">0 saved</span>
+        </div>
+        <div id="links-list" class="overflow-hidden rounded-2xl border border-white/10"></div>
+      </section>
     </main>
   </div>
 
   <script is:inline>
-    const STORAGE_KEY = 'apkmoby.social.settings.v1';
+    const STORAGE_KEY = 'apkmoby.social.links.v2';
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
     const form = document.getElementById('social-form');
-    const show = (el, on) => el.classList.toggle('hidden', !on);
+    const platformEl = document.getElementById('platform');
+    const customWrap = document.getElementById('custom-platform-wrap');
+    const customEl = document.getElementById('custom-platform');
+    const urlEl = document.getElementById('url');
+    const editIdEl = document.getElementById('edit-id');
+    const listEl = document.getElementById('links-list');
+    const countEl = document.getElementById('link-count');
+    const btnSaveLabel = document.getElementById('btn-save-label');
+    const btnCancelEdit = document.getElementById('btn-cancel-edit');
+    const formHeading = document.getElementById('form-heading');
+
+    const show = (el, on) => {
+      if (!el) return;
+      el.classList.toggle('hidden', !on);
+    };
     const setMsg = (id, msg) => {
       const n = document.getElementById(id);
+      if (!n) return;
       n.textContent = msg || '';
       show(n, !!msg);
     };
@@ -89,23 +141,182 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       return data;
     }
 
-    function loadSettings() {
+    function uid() {
+      return 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+    }
+
+    function loadLinks() {
       try {
-        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+        if (Array.isArray(raw)) return raw;
+        // migrate v1 flat object if present
+        const legacy = JSON.parse(localStorage.getItem('apkmoby.social.settings.v1') || 'null');
+        if (legacy && typeof legacy === 'object') {
+          const map = {
+            facebook: 'Facebook',
+            twitter: 'Twitter / X',
+            telegram: 'Telegram',
+            whatsapp: 'WhatsApp',
+            linkedin: 'LinkedIn',
+            pinterest: 'Pinterest',
+          };
+          const migrated = Object.keys(map)
+            .filter((k) => legacy[k])
+            .map((k) => ({ id: uid(), platform: map[k], url: String(legacy[k]).trim() }));
+          if (migrated.length) saveLinks(migrated);
+          return migrated;
+        }
+        return [];
       } catch {
-        return {};
+        return [];
       }
     }
 
-    function fillForm() {
-      const s = loadSettings();
-      form.facebook.value = s.facebook || '';
-      form.twitter.value = s.twitter || '';
-      form.telegram.value = s.telegram || '';
-      form.whatsapp.value = s.whatsapp || '';
-      form.linkedin.value = s.linkedin || '';
-      form.pinterest.value = s.pinterest || '';
+    function saveLinks(list) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
     }
+
+    function escapeHtml(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function resetForm() {
+      editIdEl.value = '';
+      platformEl.value = '';
+      customEl.value = '';
+      urlEl.value = '';
+      show(customWrap, false);
+      customEl.required = false;
+      btnSaveLabel.textContent = 'Add link';
+      formHeading.textContent = 'Add social link';
+      show(btnCancelEdit, false);
+      setMsg('social-msg', '');
+      setMsg('social-err', '');
+    }
+
+    function renderList() {
+      const links = loadLinks();
+      countEl.textContent = links.length + (links.length === 1 ? ' saved' : ' saved');
+      if (!links.length) {
+        listEl.innerHTML =
+          '<p class="p-6 text-sm text-slate-400">No social links yet. Choose a platform above, paste your page URL, then click Add link.</p>';
+        return;
+      }
+      listEl.innerHTML =
+        '<table class="w-full text-sm"><thead class="bg-white/5 text-left text-slate-400"><tr><th class="px-4 py-3">Platform</th><th class="px-4 py-3">Link</th><th class="px-4 py-3"></th></tr></thead><tbody>' +
+        links
+          .map((item) => {
+            const safeUrl = escapeHtml(item.url);
+            const short = item.url.length > 48 ? escapeHtml(item.url.slice(0, 48)) + '…' : safeUrl;
+            return (
+              '<tr class="border-t border-white/10">' +
+              '<td class="px-4 py-3 font-medium">' +
+              escapeHtml(item.platform) +
+              '</td><td class="px-4 py-3 max-w-[14rem] sm:max-w-none"><a class="text-cyan-300 hover:underline break-all" href="' +
+              safeUrl +
+              '" target="_blank" rel="noopener noreferrer">' +
+              short +
+              '</a></td><td class="px-4 py-3 text-right whitespace-nowrap space-x-2">' +
+              '<button type="button" data-edit="' +
+              escapeHtml(item.id) +
+              '" class="text-cyan-300">Edit</button>' +
+              '<button type="button" data-del="' +
+              escapeHtml(item.id) +
+              '" class="text-red-300">Delete</button>' +
+              '</td></tr>'
+            );
+          })
+          .join('') +
+        '</tbody></table>';
+    }
+
+    platformEl.addEventListener('change', () => {
+      const isOther = platformEl.value === 'Other';
+      show(customWrap, isOther);
+      customEl.required = isOther;
+      if (!isOther) customEl.value = '';
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      setMsg('social-err', '');
+      setMsg('social-msg', '');
+      let platform = platformEl.value;
+      if (platform === 'Other') {
+        platform = customEl.value.trim();
+        if (!platform) {
+          setMsg('social-err', 'Enter a custom platform name');
+          return;
+        }
+      }
+      const url = urlEl.value.trim();
+      if (!platform || !url) {
+        setMsg('social-err', 'Platform and URL are required');
+        return;
+      }
+      try {
+        const parsed = new URL(url);
+        if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('bad');
+      } catch {
+        setMsg('social-err', 'Enter a valid http(s) URL');
+        return;
+      }
+
+      const links = loadLinks();
+      const editId = editIdEl.value;
+      if (editId) {
+        const idx = links.findIndex((l) => l.id === editId);
+        if (idx >= 0) links[idx] = { ...links[idx], platform, url };
+        setMsg('social-msg', 'Link updated.');
+      } else {
+        links.push({ id: uid(), platform, url, createdAt: new Date().toISOString() });
+        setMsg('social-msg', 'Link added.');
+      }
+      saveLinks(links);
+      resetForm();
+      renderList();
+    });
+
+    btnCancelEdit.addEventListener('click', resetForm);
+
+    listEl.addEventListener('click', (e) => {
+      const editId = e.target.getAttribute('data-edit');
+      const delId = e.target.getAttribute('data-del');
+      const links = loadLinks();
+      if (editId) {
+        const item = links.find((l) => l.id === editId);
+        if (!item) return;
+        editIdEl.value = item.id;
+        const known = [...platformEl.options].some((o) => o.value === item.platform);
+        if (known) {
+          platformEl.value = item.platform;
+          show(customWrap, false);
+          customEl.required = false;
+          customEl.value = '';
+        } else {
+          platformEl.value = 'Other';
+          show(customWrap, true);
+          customEl.required = true;
+          customEl.value = item.platform;
+        }
+        urlEl.value = item.url;
+        btnSaveLabel.textContent = 'Update link';
+        formHeading.textContent = 'Edit social link';
+        show(btnCancelEdit, true);
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+      if (delId) {
+        if (!confirm('Delete this social link?')) return;
+        saveLinks(links.filter((l) => l.id !== delId));
+        if (editIdEl.value === delId) resetForm();
+        renderList();
+      }
+    });
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -119,7 +330,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         });
         show(loginView, false);
         show(appView, true);
-        fillForm();
+        renderList();
       } catch (err) {
         setMsg('login-error', err.message);
       }
@@ -130,33 +341,15 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       location.reload();
     });
 
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      setMsg('social-err', '');
-      setMsg('social-msg', '');
-      const payload = {
-        facebook: form.facebook.value.trim(),
-        twitter: form.twitter.value.trim(),
-        telegram: form.telegram.value.trim(),
-        whatsapp: form.whatsapp.value.trim(),
-        linkedin: form.linkedin.value.trim(),
-        pinterest: form.pinterest.value.trim(),
-        savedAt: new Date().toISOString(),
-      };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
-        setMsg('social-msg', 'Settings saved on this browser.');
-      } catch (err) {
-        setMsg('social-err', err.message || 'Could not save settings');
-      }
-    });
-
     api('/api/admin/session')
       .then(() => {
         show(loginView, false);
         show(appView, true);
-        fillForm();
+        renderList();
       })
-      .catch(() => {});
+      .catch(() => {
+        show(loginView, true);
+        show(appView, false);
+      });
   </script>
 </AdminLayout>
