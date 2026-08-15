@@ -18,8 +18,35 @@ const categories = [...ADMIN_CATEGORIES];
     <script is:inline src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js" referrerpolicy="origin"></script>
     <style is:global>
       .tox-tinymce { border-radius: 0.75rem !important; border-color: rgba(255,255,255,0.12) !important; }
-      .tox .tox-toolbar, .tox .tox-menubar, .tox .tox-edit-area__iframe { background: #121a2b !important; }
-      .tox .tox-tbtn, .tox .tox-mbtn, .tox .tox-label, .tox .tox-statusbar { color: #e2e8f0 !important; }
+      /* Light TinyMCE chrome — force dark labels (admin page CSS was washing them out) */
+      .tox .tox-toolbar,
+      .tox .tox-toolbar__primary,
+      .tox .tox-toolbar__overflow,
+      .tox .tox-menubar,
+      .tox .tox-statusbar {
+        background: #f1f5f9 !important;
+      }
+      .tox .tox-mbtn,
+      .tox .tox-mbtn__select-label,
+      .tox .tox-tbtn,
+      .tox .tox-tbtn__select-label,
+      .tox .tox-label,
+      .tox .tox-statusbar,
+      .tox .tox-statusbar__path-item,
+      .tox .tox-listboxfield .tox-listbox--select-label {
+        color: #0f172a !important;
+      }
+      .tox .tox-tbtn svg,
+      .tox .tox-mbtn svg,
+      .tox .tox-tbtn__icon-wrap svg,
+      .tox .tox-collection__item-icon svg {
+        fill: #0f172a !important;
+      }
+      .tox .tox-mbtn:hover:not(:disabled):not(.tox-mbtn--active),
+      .tox .tox-tbtn:hover:not(:disabled) {
+        background: #e2e8f0 !important;
+        color: #0f172a !important;
+      }
       .shot-thumb { width: 4.5rem; height: 8rem; object-fit: cover; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.12); }
       .preview-icon { width: 4.5rem; height: 4.5rem; object-fit: cover; border-radius: 1rem; border: 1px solid rgba(255,255,255,0.12); }
       .preview-featured { width: 12rem; height: 6.75rem; object-fit: cover; border-radius: 0.75rem; border: 1px solid rgba(255,255,255,0.12); }
