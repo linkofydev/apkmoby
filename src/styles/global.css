@@ -135,10 +135,34 @@ body {
   scroll-snap-align: start;
 }
 
-.hero-veil {
-  background:
-    linear-gradient(180deg, rgb(7 11 20 / 0.35) 0%, rgb(7 11 20 / 0.72) 55%, rgb(7 11 20 / 0.96) 100%),
-    radial-gradient(1200px 400px at 80% 20%, rgb(34 211 238 / 0.18), transparent 60%);
+.hero-home {
+  background-color: #f8fafc;
+  background-image:
+    radial-gradient(900px 420px at 90% -10%, rgb(34 211 238 / 0.22), transparent 55%),
+    radial-gradient(700px 380px at 0% 100%, rgb(165 243 252 / 0.35), transparent 50%),
+    linear-gradient(135deg, #ffffff 0%, #f0f9ff 48%, #ecfeff 100%);
+}
+
+.dark .hero-home {
+  background-color: #070b14;
+  background-image:
+    radial-gradient(900px 420px at 90% -10%, rgb(34 211 238 / 0.16), transparent 55%),
+    radial-gradient(700px 380px at 0% 100%, rgb(76 29 149 / 0.22), transparent 50%),
+    linear-gradient(135deg, #070b14 0%, #0f172a 55%, #082f49 100%);
+}
+
+.hero-home-grid {
+  background-image:
+    linear-gradient(rgb(148 163 184 / 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 0.12) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: linear-gradient(180deg, rgb(0 0 0 / 0.35), transparent 85%);
+}
+
+.dark .hero-home-grid {
+  background-image:
+    linear-gradient(rgb(148 163 184 / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(148 163 184 / 0.08) 1px, transparent 1px);
 }
 
 .dock-rail {
