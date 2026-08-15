@@ -26,14 +26,17 @@ const platforms = [
 <AdminLayout title="Social Settings · Admin">
   <style is:global>
     #login-view.hidden,
-    #app-view.hidden {
+    #app-view.hidden,
+    #add-panel.hidden,
+    #custom-platform-wrap.hidden,
+    #btn-cancel-edit.hidden {
       display: none !important;
     }
   </style>
 
   <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
     <h1 class="text-2xl font-extrabold">Publisher login</h1>
-    <p class="mt-2 text-sm text-slate-400">Social Settings is private. Not linked from the public site.</p>
+    <p class="mt-2 text-sm text-slate-400">Private console. Not linked from the public site.</p>
     <form id="login-form" class="mt-8 space-y-4">
       <label class="block text-sm">
         Email
@@ -50,57 +53,58 @@ const platforms = [
 
   <div id="app-view" class="hidden">
     <header class="sticky top-0 z-20 border-b border-white/10 bg-ink/90 backdrop-blur">
-      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+      <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <p class="font-bold">Apk Moby · Admin</p>
         <nav class="flex flex-wrap items-center gap-2 text-sm">
           <a href="/admin-panel/" class="rounded-lg border border-white/15 px-3 py-1.5 text-slate-300 hover:text-white">Articles</a>
           <a href="/admin-panel/social-settings/" class="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-cyan-300">Social Settings</a>
-          <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5">Logout</button>
+          <button id="btn-new-link" type="button" class="rounded-lg bg-cyan-400 px-3 py-1.5 text-sm font-bold text-ink">+ Add link</button>
+          <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
         </nav>
       </div>
     </header>
 
-    <main class="mx-auto max-w-3xl px-4 py-8">
-      <h1 class="text-2xl font-extrabold">Social Settings</h1>
-      <p class="mt-2 max-w-xl text-sm leading-6 text-slate-400">
-        Add only the platforms you use. Pick a network, paste your page/channel link, then save. Links stay on this page only (not on the articles dashboard).
-      </p>
-
-      <section class="mt-8 rounded-2xl border border-white/10 bg-ink-card/60 p-5">
-        <h2 class="text-lg font-bold" id="form-heading">Add social link</h2>
-        <form id="social-form" class="mt-4 space-y-4">
+    <main class="mx-auto max-w-6xl px-4 py-8">
+      <section id="add-panel" class="mb-8 hidden rounded-2xl border border-white/10 bg-ink-card/60 p-5">
+        <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 class="text-xl font-bold" id="form-heading">Add social link</h2>
+            <p class="mt-1 text-sm text-slate-400">Choose a platform, paste your page/channel URL, then save. Links stay on this page only.</p>
+          </div>
+          <button type="button" id="btn-close-panel" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Close</button>
+        </div>
+        <form id="social-form" class="grid gap-4 md:grid-cols-2">
           <input type="hidden" id="edit-id" value="" />
-          <label class="block text-sm">
+          <label class="text-sm">
             Platform
-            <select id="platform" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5">
+            <select id="platform" required class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2">
               <option value="">Select platform…</option>
               {platforms.map((p) => <option value={p}>{p}</option>)}
             </select>
           </label>
-          <label id="custom-platform-wrap" class="hidden block text-sm">
+          <label id="custom-platform-wrap" class="hidden text-sm">
             Custom platform name
-            <input id="custom-platform" type="text" placeholder="e.g. Quora, Mastodon, Line" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5" />
+            <input id="custom-platform" type="text" placeholder="e.g. Quora, Mastodon, Line" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
           </label>
-          <label class="block text-sm">
+          <label class="text-sm md:col-span-2">
             Page / channel URL
-            <input id="url" type="url" required placeholder="https://…" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2.5" />
+            <input id="url" type="url" required placeholder="https://…" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
           </label>
-          <div class="flex flex-wrap gap-2">
-            <button type="submit" id="btn-save-link" class="inline-flex items-center gap-2 rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">
-              <span aria-hidden="true">+</span>
-              <span id="btn-save-label">Add link</span>
+          <div class="md:col-span-2 flex flex-wrap gap-3">
+            <button type="submit" id="btn-save-link" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">
+              <span id="btn-save-label">Save link</span>
             </button>
             <button type="button" id="btn-cancel-edit" class="hidden rounded-xl border border-white/15 px-5 py-2.5 text-sm">Cancel edit</button>
           </div>
-          <p id="social-msg" class="hidden text-sm text-emerald-300"></p>
-          <p id="social-err" class="hidden text-sm text-red-400"></p>
+          <p id="social-msg" class="hidden md:col-span-2 text-sm text-emerald-300"></p>
+          <p id="social-err" class="hidden md:col-span-2 text-sm text-red-400"></p>
         </form>
       </section>
 
-      <section class="mt-8">
-        <div class="mb-3 flex items-center justify-between gap-3">
-          <h2 class="text-lg font-bold">Saved profiles</h2>
-          <span id="link-count" class="text-xs text-slate-500">0 saved</span>
+      <section id="list-panel">
+        <div class="mb-4 flex items-center justify-between gap-3">
+          <h2 class="text-xl font-bold">Saved profiles</h2>
+          <input id="list-search" type="search" placeholder="Search…" class="w-56 rounded-lg border border-white/10 bg-ink-card px-3 py-2 text-sm" />
         </div>
         <div id="links-list" class="overflow-hidden rounded-2xl border border-white/10"></div>
       </section>
@@ -111,6 +115,7 @@ const platforms = [
     const STORAGE_KEY = 'apkmoby.social.links.v2';
     const loginView = document.getElementById('login-view');
     const appView = document.getElementById('app-view');
+    const addPanel = document.getElementById('add-panel');
     const form = document.getElementById('social-form');
     const platformEl = document.getElementById('platform');
     const customWrap = document.getElementById('custom-platform-wrap');
@@ -118,7 +123,7 @@ const platforms = [
     const urlEl = document.getElementById('url');
     const editIdEl = document.getElementById('edit-id');
     const listEl = document.getElementById('links-list');
-    const countEl = document.getElementById('link-count');
+    const searchEl = document.getElementById('list-search');
     const btnSaveLabel = document.getElementById('btn-save-label');
     const btnCancelEdit = document.getElementById('btn-cancel-edit');
     const formHeading = document.getElementById('form-heading');
@@ -149,7 +154,6 @@ const platforms = [
       try {
         const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
         if (Array.isArray(raw)) return raw;
-        // migrate v1 flat object if present
         const legacy = JSON.parse(localStorage.getItem('apkmoby.social.settings.v1') || 'null');
         if (legacy && typeof legacy === 'object') {
           const map = {
@@ -184,26 +188,45 @@ const platforms = [
         .replace(/"/g, '&quot;');
     }
 
-    function resetForm() {
+    function openAddPanel(editing) {
+      show(addPanel, true);
+      if (!editing) {
+        resetFormFields();
+        formHeading.textContent = 'Add social link';
+        btnSaveLabel.textContent = 'Save link';
+      }
+      addPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function closeAddPanel() {
+      show(addPanel, false);
+      resetFormFields();
+    }
+
+    function resetFormFields() {
       editIdEl.value = '';
       platformEl.value = '';
       customEl.value = '';
       urlEl.value = '';
       show(customWrap, false);
       customEl.required = false;
-      btnSaveLabel.textContent = 'Add link';
+      btnSaveLabel.textContent = 'Save link';
       formHeading.textContent = 'Add social link';
       show(btnCancelEdit, false);
       setMsg('social-msg', '');
       setMsg('social-err', '');
     }
 
-    function renderList() {
-      const links = loadLinks();
-      countEl.textContent = links.length + (links.length === 1 ? ' saved' : ' saved');
+    function renderList(filter) {
+      const q = (filter || '').toLowerCase();
+      const links = loadLinks().filter((item) => {
+        if (!q) return true;
+        return (item.platform + ' ' + item.url).toLowerCase().includes(q);
+      });
       if (!links.length) {
-        listEl.innerHTML =
-          '<p class="p-6 text-sm text-slate-400">No social links yet. Choose a platform above, paste your page URL, then click Add link.</p>';
+        listEl.innerHTML = q
+          ? '<p class="p-6 text-sm text-slate-400">No matches.</p>'
+          : '<p class="p-6 text-sm text-slate-400">No social links yet. Click <strong class="text-slate-200">+ Add link</strong> to add your first profile.</p>';
         return;
       }
       listEl.innerHTML =
@@ -211,12 +234,11 @@ const platforms = [
         links
           .map((item) => {
             const safeUrl = escapeHtml(item.url);
-            const short = item.url.length > 48 ? escapeHtml(item.url.slice(0, 48)) + '…' : safeUrl;
+            const short = item.url.length > 56 ? escapeHtml(item.url.slice(0, 56)) + '…' : safeUrl;
             return (
-              '<tr class="border-t border-white/10">' +
-              '<td class="px-4 py-3 font-medium">' +
+              '<tr class="border-t border-white/10"><td class="px-4 py-3 font-medium">' +
               escapeHtml(item.platform) +
-              '</td><td class="px-4 py-3 max-w-[14rem] sm:max-w-none"><a class="text-cyan-300 hover:underline break-all" href="' +
+              '</td><td class="px-4 py-3"><a class="text-cyan-300 hover:underline break-all" href="' +
               safeUrl +
               '" target="_blank" rel="noopener noreferrer">' +
               short +
@@ -226,8 +248,7 @@ const platforms = [
               '" class="text-cyan-300">Edit</button>' +
               '<button type="button" data-del="' +
               escapeHtml(item.id) +
-              '" class="text-red-300">Delete</button>' +
-              '</td></tr>'
+              '" class="text-red-300">Delete</button></td></tr>'
             );
           })
           .join('') +
@@ -240,6 +261,14 @@ const platforms = [
       customEl.required = isOther;
       if (!isOther) customEl.value = '';
     });
+
+    document.getElementById('btn-new-link').addEventListener('click', () => openAddPanel(false));
+    document.getElementById('btn-close-panel').addEventListener('click', closeAddPanel);
+    btnCancelEdit.addEventListener('click', () => {
+      resetFormFields();
+      closeAddPanel();
+    });
+    searchEl.addEventListener('input', (e) => renderList(e.target.value));
 
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -277,11 +306,9 @@ const platforms = [
         setMsg('social-msg', 'Link added.');
       }
       saveLinks(links);
-      resetForm();
-      renderList();
+      closeAddPanel();
+      renderList(searchEl.value);
     });
-
-    btnCancelEdit.addEventListener('click', resetForm);
 
     listEl.addEventListener('click', (e) => {
       const editId = e.target.getAttribute('data-edit');
@@ -290,6 +317,7 @@ const platforms = [
       if (editId) {
         const item = links.find((l) => l.id === editId);
         if (!item) return;
+        openAddPanel(true);
         editIdEl.value = item.id;
         const known = [...platformEl.options].some((o) => o.value === item.platform);
         if (known) {
@@ -307,14 +335,13 @@ const platforms = [
         btnSaveLabel.textContent = 'Update link';
         formHeading.textContent = 'Edit social link';
         show(btnCancelEdit, true);
-        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
       if (delId) {
         if (!confirm('Delete this social link?')) return;
         saveLinks(links.filter((l) => l.id !== delId));
-        if (editIdEl.value === delId) resetForm();
-        renderList();
+        if (editIdEl.value === delId) closeAddPanel();
+        renderList(searchEl.value);
       }
     });
 
@@ -330,7 +357,7 @@ const platforms = [
         });
         show(loginView, false);
         show(appView, true);
-        renderList();
+        renderList('');
       } catch (err) {
         setMsg('login-error', err.message);
       }
@@ -345,7 +372,7 @@ const platforms = [
       .then(() => {
         show(loginView, false);
         show(appView, true);
-        renderList();
+        renderList('');
       })
       .catch(() => {
         show(loginView, true);
