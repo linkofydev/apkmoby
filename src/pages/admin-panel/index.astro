@@ -171,6 +171,24 @@ const categories = [...ADMIN_CATEGORIES];
       </main>
     </div>
 
+    <div id="reauth-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="reauth-title">
+      <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-ink-card p-5 shadow-xl">
+        <h3 id="reauth-title" class="text-lg font-bold">Confirm with password</h3>
+        <p id="reauth-desc" class="mt-2 text-sm text-slate-400">Enter your admin password to continue.</p>
+        <form id="reauth-form" class="mt-4 space-y-3">
+          <label class="block text-sm">
+            Password
+            <input id="reauth-password" name="password" type="password" required autocomplete="current-password" class="mt-1 w-full rounded-xl border border-white/10 bg-ink px-3 py-2.5" />
+          </label>
+          <p id="reauth-error" class="hidden text-sm text-red-400"></p>
+          <div class="flex gap-2 pt-1">
+            <button type="submit" class="flex-1 rounded-xl bg-cyan-400 py-2.5 text-sm font-bold text-ink">Confirm</button>
+            <button type="button" id="reauth-cancel" class="flex-1 rounded-xl border border-white/15 py-2.5 text-sm">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script is:inline>
       const loginView = document.getElementById('login-view');
       const appView = document.getElementById('app-view');
@@ -178,10 +196,17 @@ const categories = [...ADMIN_CATEGORIES];
       const editorPanel = document.getElementById('editor-panel');
       const listEl = document.getElementById('list');
       const form = document.getElementById('editor');
+      const reauthModal = document.getElementById('reauth-modal');
+      const reauthForm = document.getElementById('reauth-form');
+      const reauthPassword = document.getElementById('reauth-password');
+      const reauthError = document.getElementById('reauth-error');
+      const reauthDesc = document.getElementById('reauth-desc');
       let mode = 'create';
       let currentSlug = '';
       let rows = [];
       let editorsReady = false;
+      let adminEmail = '';
+      let reauthResolver = null;
 
       const today = () => new Date().toISOString().slice(0, 10);
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -191,6 +216,61 @@ const categories = [...ADMIN_CATEGORIES];
         n.textContent = msg || '';
         show(n, !!msg);
       };
+
+      function closeReauth(ok) {
+        show(reauthModal, false);
+        reauthModal.classList.remove('flex');
+        reauthModal.classList.add('hidden');
+        reauthPassword.value = '';
+        setError('reauth-error', '');
+        const resolve = reauthResolver;
+        reauthResolver = null;
+        if (resolve) resolve(!!ok);
+      }
+
+      function requireAdminPassword(actionLabel) {
+        return new Promise((resolve) => {
+          if (!adminEmail) {
+            alert('Session expired. Please log in again.');
+            resolve(false);
+            return;
+          }
+          reauthResolver = resolve;
+          reauthDesc.textContent = 'Enter your admin password to ' + actionLabel + '.';
+          setError('reauth-error', '');
+          reauthPassword.value = '';
+          reauthModal.classList.remove('hidden');
+          reauthModal.classList.add('flex');
+          setTimeout(() => reauthPassword.focus(), 50);
+        });
+      }
+
+      reauthForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setError('reauth-error', '');
+        const password = reauthPassword.value;
+        if (!password) {
+          setError('reauth-error', 'Password is required');
+          return;
+        }
+        try {
+          await api('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: adminEmail, password }),
+          });
+          closeReauth(true);
+        } catch (err) {
+          setError('reauth-error', err.message || 'Invalid password');
+        }
+      });
+      document.getElementById('reauth-cancel').addEventListener('click', () => closeReauth(false));
+      reauthModal.addEventListener('click', (e) => {
+        if (e.target === reauthModal) closeReauth(false);
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !reauthModal.classList.contains('hidden')) closeReauth(false);
+      });
 
       function normalizeSlug(v) {
         return String(v || '')
@@ -517,11 +597,13 @@ const categories = [...ADMIN_CATEGORIES];
         setError('login-error', '');
         const fd = new FormData(e.target);
         try {
+          const email = String(fd.get('email') || '').trim().toLowerCase();
           await api('/api/admin/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+            body: JSON.stringify({ email, password: fd.get('password') }),
           });
+          adminEmail = email;
           show(loginView, false);
           show(appView, true);
           await loadList();
@@ -620,13 +702,17 @@ const categories = [...ADMIN_CATEGORIES];
         const edit = e.target.getAttribute('data-edit');
         const del = e.target.getAttribute('data-del');
         if (edit) {
+          const ok = await requireAdminPassword('edit this article');
+          if (!ok) return;
           const entry = await api('/api/admin/apps/' + edit);
           currentSlug = edit;
           form.slug.dataset.locked = '1';
           await fillForm({ ...entry.data, sha: entry.sha });
           await openEditor(false);
         }
-        if (del && confirm('Delete this APK listing?')) {
+        if (del) {
+          const ok = await requireAdminPassword('delete this article');
+          if (!ok) return;
           await api('/api/admin/apps/' + del + '?sha=' + e.target.getAttribute('data-sha'), { method: 'DELETE' });
           await loadList();
         }
@@ -692,7 +778,8 @@ const categories = [...ADMIN_CATEGORIES];
 
       document.getElementById('btn-delete').addEventListener('click', async () => {
         if (mode !== 'edit') return;
-        if (!confirm('Delete this listing?')) return;
+        const ok = await requireAdminPassword('delete this article');
+        if (!ok) return;
         await api('/api/admin/apps/' + currentSlug + '?sha=' + form.sha.value, { method: 'DELETE' });
         await loadList();
         show(editorPanel, false);
@@ -700,7 +787,8 @@ const categories = [...ADMIN_CATEGORIES];
       });
 
       api('/api/admin/session')
-        .then(async () => {
+        .then(async (data) => {
+          adminEmail = String(data.email || '').trim().toLowerCase();
           show(loginView, false);
           show(appView, true);
           await loadList();
