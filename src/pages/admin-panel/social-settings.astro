@@ -1,0 +1,162 @@
+---
+import AdminLayout from '../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Social Settings · Admin">
+  <div id="login-view" class="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4">
+    <h1 class="text-2xl font-extrabold">Publisher login</h1>
+    <p class="mt-2 text-sm text-slate-400">Social Settings is private. Not linked from the public site.</p>
+    <form id="login-form" class="mt-8 space-y-4">
+      <label class="block text-sm">
+        Email
+        <input name="email" type="email" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+      </label>
+      <label class="block text-sm">
+        Password
+        <input name="password" type="password" required class="mt-1 w-full rounded-xl border border-white/10 bg-ink-card px-3 py-2.5" />
+      </label>
+      <p id="login-error" class="hidden text-sm text-red-400"></p>
+      <button class="w-full rounded-xl bg-cyan-400 py-2.5 text-sm font-bold text-ink">Sign in</button>
+    </form>
+  </div>
+
+  <div id="app-view" class="hidden">
+    <header class="sticky top-0 z-20 border-b border-white/10 bg-ink/90 backdrop-blur">
+      <div class="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+        <p class="font-bold">Apk Moby · Admin</p>
+        <nav class="flex flex-wrap items-center gap-2 text-sm">
+          <a href="/admin-panel/" class="rounded-lg border border-white/15 px-3 py-1.5 text-slate-300 hover:text-white">Articles</a>
+          <a href="/admin-panel/social-settings/" class="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-cyan-300">Social Settings</a>
+          <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5">Logout</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-3xl px-4 py-8">
+      <h1 class="text-2xl font-extrabold">Social Settings</h1>
+      <p class="mt-2 text-sm text-slate-400">
+        Store your profile / channel links for quick reference. Saved in this browser (localStorage). Internal only — never indexed.
+      </p>
+
+      <form id="social-form" class="mt-8 grid gap-4">
+        <label class="text-sm">
+          Facebook Page URL
+          <input name="facebook" type="url" placeholder="https://facebook.com/yourpage" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          Twitter / X Profile URL
+          <input name="twitter" type="url" placeholder="https://x.com/yourhandle" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          Telegram Channel Link
+          <input name="telegram" type="url" placeholder="https://t.me/yourchannel" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          WhatsApp Group / Channel Link
+          <input name="whatsapp" type="url" placeholder="https://chat.whatsapp.com/..." class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          LinkedIn Page URL
+          <input name="linkedin" type="url" placeholder="https://linkedin.com/company/..." class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <label class="text-sm">
+          Pinterest Profile URL
+          <input name="pinterest" type="url" placeholder="https://pinterest.com/yourprofile" class="mt-1 w-full rounded-lg border border-white/10 bg-ink-card px-3 py-2" />
+        </label>
+        <p id="social-msg" class="hidden text-sm text-emerald-300"></p>
+        <p id="social-err" class="hidden text-sm text-red-400"></p>
+        <button type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Save Settings</button>
+      </form>
+    </main>
+  </div>
+
+  <script is:inline>
+    const STORAGE_KEY = 'apkmoby.social.settings.v1';
+    const loginView = document.getElementById('login-view');
+    const appView = document.getElementById('app-view');
+    const form = document.getElementById('social-form');
+    const show = (el, on) => el.classList.toggle('hidden', !on);
+    const setMsg = (id, msg) => {
+      const n = document.getElementById(id);
+      n.textContent = msg || '';
+      show(n, !!msg);
+    };
+
+    async function api(url, opts) {
+      const res = await fetch(url, { credentials: 'same-origin', ...opts });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Request failed');
+      return data;
+    }
+
+    function loadSettings() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}') || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function fillForm() {
+      const s = loadSettings();
+      form.facebook.value = s.facebook || '';
+      form.twitter.value = s.twitter || '';
+      form.telegram.value = s.telegram || '';
+      form.whatsapp.value = s.whatsapp || '';
+      form.linkedin.value = s.linkedin || '';
+      form.pinterest.value = s.pinterest || '';
+    }
+
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setMsg('login-error', '');
+      const fd = new FormData(e.target);
+      try {
+        await api('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: fd.get('email'), password: fd.get('password') }),
+        });
+        show(loginView, false);
+        show(appView, true);
+        fillForm();
+      } catch (err) {
+        setMsg('login-error', err.message);
+      }
+    });
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      await api('/api/admin/logout', { method: 'POST' });
+      location.reload();
+    });
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      setMsg('social-err', '');
+      setMsg('social-msg', '');
+      const payload = {
+        facebook: form.facebook.value.trim(),
+        twitter: form.twitter.value.trim(),
+        telegram: form.telegram.value.trim(),
+        whatsapp: form.whatsapp.value.trim(),
+        linkedin: form.linkedin.value.trim(),
+        pinterest: form.pinterest.value.trim(),
+        savedAt: new Date().toISOString(),
+      };
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+        setMsg('social-msg', 'Settings saved on this browser.');
+      } catch (err) {
+        setMsg('social-err', err.message || 'Could not save settings');
+      }
+    });
+
+    api('/api/admin/session')
+      .then(() => {
+        show(loginView, false);
+        show(appView, true);
+        fillForm();
+      })
+      .catch(() => {});
+  </script>
+</AdminLayout>

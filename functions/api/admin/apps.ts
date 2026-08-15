@@ -16,10 +16,12 @@ export const onRequestGet: PagesFunction<CmsEnv> = async ({ request, env }) => {
           slug: entry.data.slug || slug,
           sha: entry.sha,
           appName: entry.data.appName,
+          title: entry.data.title || entry.data.metaTitle || entry.data.appName,
           category: entry.data.category,
           version: entry.data.version,
           updatedDate: entry.data.updatedDate,
           icon: entry.data.icon,
+          featuredImage: entry.data.featuredImage || entry.data.icon,
         });
       }
     }

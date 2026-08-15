@@ -10,7 +10,9 @@ const categories = [...ADMIN_CATEGORIES];
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="robots" content="noindex, nofollow" />
+    <meta name="robots" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet" />
+    <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet" />
     <title>Admin Panel</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <script is:inline src="https://cdn.jsdelivr.net/npm/tinymce@7.6.1/tinymce.min.js" referrerpolicy="origin"></script>
@@ -43,12 +45,14 @@ const categories = [...ADMIN_CATEGORIES];
 
     <div id="app-view" class="hidden">
       <header class="sticky top-0 z-20 border-b border-white/10 bg-ink/90 backdrop-blur">
-        <div class="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+        <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
           <p class="font-bold">Apk Moby · Admin</p>
-          <div class="flex gap-2">
+          <nav class="flex flex-wrap items-center gap-2 text-sm">
+            <a href="/admin-panel/" class="rounded-lg bg-white/10 px-3 py-1.5 font-medium text-cyan-300">Articles</a>
+            <a href="/admin-panel/social-settings/" class="rounded-lg border border-white/15 px-3 py-1.5 text-slate-300 hover:text-white">Social Settings</a>
             <button id="btn-new" type="button" class="rounded-lg bg-cyan-400 px-3 py-1.5 text-sm font-bold text-ink">New APK</button>
             <button id="btn-logout" type="button" class="rounded-lg border border-white/15 px-3 py-1.5 text-sm">Logout</button>
-          </div>
+          </nav>
         </div>
       </header>
 
@@ -221,6 +225,29 @@ const categories = [...ADMIN_CATEGORIES];
       </div>
     </div>
 
+    <div id="share-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-labelledby="share-title">
+      <div class="w-full max-w-md rounded-2xl border border-white/10 bg-ink-card p-5 shadow-xl">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 id="share-title" class="text-lg font-bold">Browser Share</h3>
+            <p id="share-article" class="mt-1 text-sm text-slate-400">Select networks to open share popups.</p>
+          </div>
+          <button type="button" id="share-close" class="rounded-lg border border-white/15 px-2.5 py-1 text-sm">Close</button>
+        </div>
+        <p id="share-url" class="mt-3 break-all rounded-lg border border-white/10 bg-ink px-3 py-2 text-xs text-cyan-200"></p>
+        <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <button type="button" data-share="facebook" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">Facebook</button>
+          <button type="button" data-share="twitter" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">Twitter / X</button>
+          <button type="button" data-share="telegram" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">Telegram</button>
+          <button type="button" data-share="whatsapp" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">WhatsApp</button>
+          <button type="button" data-share="linkedin" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">LinkedIn</button>
+          <button type="button" data-share="pinterest" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">Pinterest</button>
+        </div>
+        <button type="button" id="share-open-all" class="mt-4 w-full rounded-xl bg-cyan-400 py-2.5 text-sm font-bold text-ink">Open All Tabs</button>
+        <p class="mt-2 text-xs text-slate-500">Allow popups for this site so all networks can open.</p>
+      </div>
+    </div>
+
     <script is:inline>
       const loginView = document.getElementById('login-view');
       const appView = document.getElementById('app-view');
@@ -233,12 +260,16 @@ const categories = [...ADMIN_CATEGORIES];
       const reauthPassword = document.getElementById('reauth-password');
       const reauthError = document.getElementById('reauth-error');
       const reauthDesc = document.getElementById('reauth-desc');
+      const shareModal = document.getElementById('share-modal');
+      const shareArticleEl = document.getElementById('share-article');
+      const shareUrlEl = document.getElementById('share-url');
       let mode = 'create';
       let currentSlug = '';
       let rows = [];
       let editorsReady = false;
       let adminEmail = '';
       let reauthResolver = null;
+      let sharePayload = null;
 
       const today = () => new Date().toISOString().slice(0, 10);
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -302,6 +333,70 @@ const categories = [...ADMIN_CATEGORIES];
       });
       document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && !reauthModal.classList.contains('hidden')) closeReauth(false);
+        if (e.key === 'Escape' && !shareModal.classList.contains('hidden')) closeShareModal();
+      });
+
+      function absolutePublicUrl(path) {
+        if (!path) return '';
+        if (/^https?:\/\//i.test(path)) return path;
+        return 'https://apkmoby.com' + (path.startsWith('/') ? path : '/' + path);
+      }
+
+      function buildShareLinks(article) {
+        const title = encodeURIComponent(article.title || article.appName || '');
+        const url = encodeURIComponent(article.url);
+        const image = encodeURIComponent(article.image || '');
+        return {
+          facebook: 'https://www.facebook.com/sharer/sharer.php?u=' + url,
+          twitter: 'https://twitter.com/intent/tweet?url=' + url + '&text=' + title,
+          telegram: 'https://t.me/share/url?url=' + url + '&text=' + title,
+          whatsapp: 'https://api.whatsapp.com/send?text=' + title + '%20' + url,
+          linkedin: 'https://www.linkedin.com/sharing/share-offsite/?url=' + url,
+          pinterest: 'https://pinterest.com/pin/create/button/?url=' + url + '&media=' + image + '&description=' + title,
+        };
+      }
+
+      function openSharePopup(href) {
+        window.open(href, '_blank', 'noopener,noreferrer,width=640,height=720');
+      }
+
+      function closeShareModal() {
+        shareModal.classList.add('hidden');
+        shareModal.classList.remove('flex');
+        sharePayload = null;
+      }
+
+      function openShareModal(row) {
+        const url = 'https://apkmoby.com/' + row.slug;
+        sharePayload = {
+          title: row.title || row.appName || row.slug,
+          appName: row.appName || '',
+          slug: row.slug,
+          url,
+          image: absolutePublicUrl(row.featuredImage || row.icon || ''),
+        };
+        shareArticleEl.textContent = sharePayload.title;
+        shareUrlEl.textContent = url;
+        shareModal.classList.remove('hidden');
+        shareModal.classList.add('flex');
+      }
+
+      document.getElementById('share-close').addEventListener('click', closeShareModal);
+      shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) closeShareModal();
+      });
+      shareModal.addEventListener('click', (e) => {
+        const network = e.target.getAttribute('data-share');
+        if (!network || !sharePayload) return;
+        const links = buildShareLinks(sharePayload);
+        if (links[network]) openSharePopup(links[network]);
+      });
+      document.getElementById('share-open-all').addEventListener('click', () => {
+        if (!sharePayload) return;
+        const links = buildShareLinks(sharePayload);
+        Object.values(links).forEach((href, i) => {
+          setTimeout(() => openSharePopup(href), i * 250);
+        });
       });
 
       function normalizeSlug(v) {
@@ -598,7 +693,9 @@ const categories = [...ADMIN_CATEGORIES];
                 r.version +
                 '</td><td>' +
                 (r.updatedDate || '') +
-                '</td><td class="px-4 py-3 text-right space-x-3"><button type="button" data-edit="' +
+                '</td><td class="px-4 py-3 text-right whitespace-nowrap space-x-2"><button type="button" data-share-slug="' +
+                r.slug +
+                '" class="text-amber-300">Share</button><button type="button" data-edit="' +
                 r.slug +
                 '" class="text-cyan-300">Edit</button><button type="button" data-del="' +
                 r.slug +
@@ -795,8 +892,14 @@ const categories = [...ADMIN_CATEGORIES];
       });
 
       listEl.addEventListener('click', async (e) => {
+        const shareSlug = e.target.getAttribute('data-share-slug');
         const edit = e.target.getAttribute('data-edit');
         const del = e.target.getAttribute('data-del');
+        if (shareSlug) {
+          const row = rows.find((r) => r.slug === shareSlug);
+          if (row) openShareModal(row);
+          return;
+        }
         if (edit) {
           const ok = await requireAdminPassword('edit this article');
           if (!ok) return;

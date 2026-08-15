@@ -19,12 +19,25 @@
   Cache-Control: public, max-age=604800
 
 /admin-panel
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
 
 /admin-panel/*
-  X-Robots-Tag: noindex
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+
+/admin
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
 
 /api/admin/*
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
+
+/api/remote-upload-apk
+  X-Robots-Tag: noindex, nofollow
   Cache-Control: no-store
