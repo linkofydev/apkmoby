@@ -22,7 +22,19 @@
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
 
+/admin-panel/
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+
 /admin-panel/*
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+
+/admin-panel.html
+  X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
+  Cache-Control: no-store
+
+/admin-panel/*.html
   X-Robots-Tag: noindex, nofollow, noarchive, nosnippet
   Cache-Control: no-store
 
