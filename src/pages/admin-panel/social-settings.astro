@@ -1,26 +1,8 @@
 ---
 import AdminLayout from '../../layouts/AdminLayout.astro';
+import { SOCIAL_PLATFORM_LABELS } from '../../lib/social-platforms';
 
-const platforms = [
-  'Facebook',
-  'Twitter / X',
-  'Instagram',
-  'Telegram',
-  'WhatsApp',
-  'YouTube',
-  'TikTok',
-  'LinkedIn',
-  'Pinterest',
-  'Reddit',
-  'Discord',
-  'Threads',
-  'Snapchat',
-  'Tumblr',
-  'VK',
-  'Medium',
-  'GitHub',
-  'Other',
-];
+const platforms = SOCIAL_PLATFORM_LABELS;
 ---
 
 <AdminLayout title="Social Settings · Admin">
@@ -159,7 +141,7 @@ const platforms = [
         if (legacy && typeof legacy === 'object') {
           const map = {
             facebook: 'Facebook',
-            twitter: 'Twitter / X',
+            twitter: 'X (Twitter)',
             telegram: 'Telegram',
             whatsapp: 'WhatsApp',
             linkedin: 'LinkedIn',

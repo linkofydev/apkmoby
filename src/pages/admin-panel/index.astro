@@ -1,8 +1,10 @@
 ---
 import '../../styles/global.css';
 import { ADMIN_CATEGORIES } from '../../config';
+import { socialPlatformsForClient } from '../../lib/social-platforms';
 
 const categories = [...ADMIN_CATEGORIES];
+const socialPlatformsJson = JSON.stringify(socialPlatformsForClient());
 ---
 
 <!doctype html>
@@ -245,10 +247,11 @@ const categories = [...ADMIN_CATEGORIES];
           <button type="button" id="share-copy" class="rounded-xl border border-white/15 px-4 py-2.5 text-sm hover:bg-white/5">Copy link</button>
           <button type="button" id="share-open-all" class="flex-1 rounded-xl bg-cyan-400 px-4 py-2.5 text-sm font-bold text-ink">Open All Tabs</button>
         </div>
-        <p class="mt-2 text-xs text-slate-500">Allow popups for this site. Each button opens that network’s share page with your article ready.</p>
+        <p class="mt-2 text-xs text-slate-500">Allow popups. Platforms marked “paste” (Instagram, TikTok, etc.) open the app/site with your link copied — paste into the post.</p>
       </div>
     </div>
 
+    <script is:inline set:html={`window.__APKMOBY_SOCIAL_PLATFORMS = ${socialPlatformsJson};`} />
     <script is:inline>
       const loginView = document.getElementById('login-view');
       const appView = document.getElementById('app-view');
@@ -276,7 +279,8 @@ const categories = [...ADMIN_CATEGORIES];
       let sharePayload = null;
       let shareTargets = [];
       let shareShowAll = false;
-      const SHARE_PREVIEW_COUNT = 6;
+      const SHARE_PREVIEW_COUNT = 9;
+      const SOCIAL_PLATFORMS = window.__APKMOBY_SOCIAL_PLATFORMS || [];
 
       const today = () => new Date().toISOString().slice(0, 10);
       const slugify = (v) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
@@ -349,29 +353,31 @@ const categories = [...ADMIN_CATEGORIES];
         return 'https://apkmoby.com' + (path.startsWith('/') ? path : '/' + path);
       }
 
-      function buildComposerTargets(article) {
+      function fillShareTemplate(template, article) {
         const title = encodeURIComponent(article.title || article.appName || '');
-        const url = encodeURIComponent(article.url);
+        const url = encodeURIComponent(article.url || '');
         const image = encodeURIComponent(article.image || '');
-        const text = encodeURIComponent((article.title || '') + ' ' + article.url);
-        return [
-          { id: 'facebook', label: 'Facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + url },
-          { id: 'twitter', label: 'Twitter / X', href: 'https://twitter.com/intent/tweet?url=' + url + '&text=' + title },
-          { id: 'telegram', label: 'Telegram', href: 'https://t.me/share/url?url=' + url + '&text=' + title },
-          { id: 'whatsapp', label: 'WhatsApp', href: 'https://api.whatsapp.com/send?text=' + text },
-          { id: 'linkedin', label: 'LinkedIn', href: 'https://www.linkedin.com/sharing/share-offsite/?url=' + url },
-          { id: 'pinterest', label: 'Pinterest', href: 'https://pinterest.com/pin/create/button/?url=' + url + '&media=' + image + '&description=' + title },
-          { id: 'reddit', label: 'Reddit', href: 'https://www.reddit.com/submit?url=' + url + '&title=' + title },
-          { id: 'tumblr', label: 'Tumblr', href: 'https://www.tumblr.com/widgets/share/tool?canonicalUrl=' + url + '&title=' + title + '&caption=' + title },
-          { id: 'vk', label: 'VK', href: 'https://vk.com/share.php?url=' + url + '&title=' + title },
-          { id: 'line', label: 'Line', href: 'https://social-plugins.line.me/lineit/share?url=' + url },
-          { id: 'threads', label: 'Threads', href: 'https://www.threads.net/intent/post?text=' + text },
-          { id: 'email', label: 'Email', href: 'mailto:?subject=' + title + '&body=' + text },
-          { id: 'sms', label: 'SMS', href: 'sms:?&body=' + text },
-          { id: 'buffer', label: 'Buffer', href: 'https://buffer.com/add?text=' + title + '&url=' + url },
-          { id: 'hackernews', label: 'Hacker News', href: 'https://news.ycombinator.com/submitlink?u=' + url + '&t=' + title },
-          { id: 'bluesky', label: 'Bluesky', href: 'https://bsky.app/intent/compose?text=' + text },
-        ];
+        const text = encodeURIComponent(((article.title || '') + ' ' + (article.url || '')).trim());
+        return String(template || '')
+          .split('{{title}}').join(title)
+          .split('{{url}}').join(url)
+          .split('{{image}}').join(image)
+          .split('{{text}}').join(text);
+      }
+
+      function buildComposerTargets(article) {
+        return (SOCIAL_PLATFORMS || [])
+          .filter((p) => p && p.id !== 'other')
+          .map((p) => {
+            const hasComposer = !!(p.shareTemplate && String(p.shareTemplate).trim());
+            return {
+              id: p.id,
+              label: p.label,
+              href: hasComposer ? fillShareTemplate(p.shareTemplate, article) : p.home || '',
+              needsPaste: !hasComposer,
+            };
+          })
+          .filter((p) => p.href);
       }
 
       function escapeShareHtml(s) {
@@ -387,14 +393,19 @@ const categories = [...ADMIN_CATEGORIES];
         shareTargets = buildComposerTargets(sharePayload);
         const visible = shareShowAll ? shareTargets : shareTargets.slice(0, SHARE_PREVIEW_COUNT);
         shareComposersEl.innerHTML = visible
-          .map(
-            (t) =>
+          .map((t) => {
+            const badge = t.needsPaste
+              ? ' <span class="text-[10px] text-slate-500">paste</span>'
+              : '';
+            return (
               '<button type="button" data-share-id="' +
               escapeShareHtml(t.id) +
-              '" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5">' +
+              '" class="rounded-xl border border-white/15 px-3 py-2.5 text-sm hover:bg-white/5 text-left">' +
               escapeShareHtml(t.label) +
-              '</button>',
-          )
+              badge +
+              '</button>'
+            );
+          })
           .join('');
         shareToggleAllBtn.textContent = shareShowAll ? 'Show Less' : 'Show All';
         shareToggleAllBtn.classList.toggle('hidden', shareTargets.length <= SHARE_PREVIEW_COUNT);
@@ -476,11 +487,17 @@ const categories = [...ADMIN_CATEGORIES];
         shareShowAll = !shareShowAll;
         renderShareButtons();
       });
-      shareModal.addEventListener('click', (e) => {
+      shareModal.addEventListener('click', async (e) => {
         const btn = e.target.closest('[data-share-id]');
         if (!btn || !sharePayload) return;
         const target = shareTargets.find((t) => t.id === btn.getAttribute('data-share-id'));
         if (!target) return;
+        if (target.needsPaste) {
+          await copyShareText();
+          shareHintEl.textContent =
+            'Link copied. ' + target.label + ' opened — paste the article link in your post.';
+          shareHintEl.classList.remove('hidden');
+        }
         const ok = openShareTab(target.href);
         if (!ok) {
           shareHintEl.textContent = 'Popup blocked. Allow popups for this site, then try again.';
@@ -500,13 +517,13 @@ const categories = [...ADMIN_CATEGORIES];
         let opened = 0;
         let blocked = 0;
         for (let i = 0; i < shareTargets.length; i++) {
-          await new Promise((r) => setTimeout(r, i === 0 ? 0 : 450));
+          await new Promise((r) => setTimeout(r, i === 0 ? 0 : 350));
           if (openShareTab(shareTargets[i].href)) opened += 1;
           else blocked += 1;
         }
         shareHintEl.textContent = blocked
-          ? 'Opened ' + opened + '/' + shareTargets.length + '. Allow popups, then click Open All Tabs again.'
-          : 'Opened ' + opened + ' share tabs with your article prefilled.';
+          ? 'Opened ' + opened + '/' + shareTargets.length + '. Allow popups, then try Open All Tabs again. Link is copied for paste-only apps.'
+          : 'Opened ' + opened + ' tabs. Link copied for apps marked “paste” (Instagram, TikTok, etc.).';
         shareHintEl.classList.remove('hidden');
       });
 
