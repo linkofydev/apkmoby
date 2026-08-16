@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config';
 import sitemap, { ChangeFreqEnum } from '@astrojs/sitemap';
 import tailwindcss from '@tailwindcss/vite';
 import indexNow from './src/integrations/indexnow.ts';
+import trailingSlashRedirects from './src/integrations/trailing-slash-redirects.ts';
 
 const site = process.env.PUBLIC_SITE_URL || 'https://apkmoby.com';
 
@@ -12,9 +13,9 @@ const site = process.env.PUBLIC_SITE_URL || 'https://apkmoby.com';
 export default defineConfig({
   site,
   output: 'static',
-  // Cloudflare Pages serves directory builds at /page/ and 308s /page → /page/.
-  // Match that so sitemap + canonicals don't point at a redirect (GSC "Redirect error").
-  trailingSlash: 'always',
+  // Cloudflare Pages: directory builds (page/index.html) force /page → /page/ 308s.
+  // File builds (page.html) serve /page with HTTP 200 — required for clean Google indexing.
+  trailingSlash: 'never',
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'hover',
@@ -27,9 +28,17 @@ export default defineConfig({
       filter: (page) =>
         !page.includes('/admin') && !page.includes('/api/') && !page.includes('/download/'),
       serialize(item) {
-        const path = new URL(item.url).pathname;
+        const url = new URL(item.url);
+        let path = url.pathname.replace(/\/$/, '') || '/';
+        // Homepage canonical always ends with /
+        if (path === '/') {
+          item.url = `${site.replace(/\/$/, '')}/`;
+        } else {
+          url.pathname = path;
+          item.url = url.toString();
+        }
         item.lastmod = new Date().toISOString();
-        if (path === '/' || path === '') {
+        if (path === '/') {
           item.changefreq = ChangeFreqEnum.DAILY;
           item.priority = 1;
         } else if (path.startsWith('/download/')) {
@@ -49,11 +58,13 @@ export default defineConfig({
       },
     }),
     indexNow(),
+    trailingSlashRedirects(),
   ],
   vite: {
     plugins: [tailwindcss()],
   },
   build: {
+    format: 'file',
     inlineStylesheets: 'always',
   },
 });

@@ -15,7 +15,7 @@ const { data } = app;
 <article
   class="group flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:border-cyan-400/60 hover:shadow-glow dark:border-slate-800 dark:bg-ink-card"
 >
-  <a href={`/${data.slug}/`} class="block overflow-hidden">
+  <a href={`/${data.slug}`} class="block overflow-hidden">
     <OptimizedImage
       src={data.featuredImage}
       alt={`${data.appName} cover`}
@@ -35,7 +35,7 @@ const { data } = app;
       />
       <div class="min-w-0">
         <h3 class="truncate font-semibold text-slate-900 dark:text-white">
-          <a href={`/${data.slug}/`}>{data.appName}</a>
+          <a href={`/${data.slug}`}>{data.appName}</a>
         </h3>
         <p class="text-xs text-slate-500 dark:text-slate-400">
           <a href={`/category/${categorySlug(data.category)}/`} class="hover:text-cyan-500">{data.category}</a>

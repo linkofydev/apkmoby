@@ -18,9 +18,9 @@ export const SITE = {
 
 export const NAV = [
   { href: '/', label: 'Home' },
-  { href: '/games/', label: 'Games' },
-  { href: '/apps/', label: 'Apps' },
-  { href: '/about/', label: 'About' },
+  { href: '/games', label: 'Games' },
+  { href: '/apps', label: 'Apps' },
+  { href: '/about', label: 'About' },
 ] as const;
 
 /** Categories shown under “Latest Games” on the homepage. */
@@ -68,13 +68,12 @@ export function absoluteUrl(path = '/'): string {
   const base = SITE.url.replace(/\/$/, '');
   if (!path || path === '/') return `${base}/`;
   if (/^https?:\/\//.test(path)) return path;
-  let p = path.startsWith('/') ? path : `/${path}`;
-  // Keep file URLs as-is; HTML routes use trailing slash (Cloudflare Pages).
-  const pathname = p.split(/[?#]/)[0] || '/';
-  if (!/\.[a-z0-9]+$/i.test(pathname) && !pathname.endsWith('/')) {
-    p = `${pathname}/${p.slice(pathname.length)}`;
-  }
-  return `${base}${p}`;
+  const raw = path.startsWith('/') ? path : `/${path}`;
+  const match = raw.match(/^([^?#]*)([?#].*)?$/);
+  // Canonical HTML URLs never use a trailing slash (Cloudflare file builds).
+  const pathname = (match?.[1] || '/').replace(/\/+$/, '') || '/';
+  const suffix = match?.[2] || '';
+  return `${base}${pathname}${suffix}`;
 }
 
 export function categorySlug(category: string): string {

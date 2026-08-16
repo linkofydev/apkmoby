@@ -9,7 +9,7 @@ export const GET: APIRoute = async (context) => {
     title: `${SITE.name} APK Feed`,
     description: SITE.description,
     site: context.site ?? SITE.url,
-    trailingSlash: true,
+    trailingSlash: false,
     xmlns: {
       atom: 'http://www.w3.org/2005/Atom',
     },

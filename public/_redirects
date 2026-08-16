@@ -1,10 +1,18 @@
-/admin-panel /admin-panel/ 301
-/admin /admin-panel/ 301
-/admin/ /admin-panel/ 301
-/admin/articles /admin-panel/ 301
-/admin/articles/ /admin-panel/ 301
-/admin/apk-files /admin-panel/apk-files/ 301
-/admin/apk-files/ /admin-panel/apk-files/ 301
-/admin/social-settings /admin-panel/social-settings/ 301
-/admin/social-settings/ /admin-panel/social-settings/ 301
+# Admin aliases → panel (file-build URLs have no trailing slash)
+/admin /admin-panel 301
+/admin/ /admin-panel 301
+/admin/articles /admin-panel 301
+/admin/articles/ /admin-panel 301
+/admin/apk-files /admin-panel/apk-files 301
+/admin/apk-files/ /admin-panel/apk-files 301
+/admin/social-settings /admin-panel/social-settings 301
+/admin/social-settings/ /admin-panel/social-settings 301
+/admin-panel/ /admin-panel 301
+/admin-panel/apk-files/ /admin-panel/apk-files 301
+/admin-panel/social-settings/ /admin-panel/social-settings 301
+
+# Sitemap alias
 /sitemap.xml /sitemap-index.xml 301
+
+# Per-page trailing-slash → canonical redirects are generated at build time
+# (see src/integrations/trailing-slash-redirects.ts) for every published article.

@@ -26,7 +26,7 @@ const { category, apps } = Astro.props;
 <BaseLayout
   title={`${category} APKs`}
   description={`Browse ${apps.length} ${category} Android APK listings with version, size, and MOD details.`}
-  canonical={`/category/${categorySlug(category)}/`}
+  canonical={`/category/${categorySlug(category)}`}
 >
   <div class="bg-neutral-100 py-8">
     <div class="mx-auto max-w-6xl px-4">
