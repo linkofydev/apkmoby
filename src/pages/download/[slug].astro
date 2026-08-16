@@ -22,7 +22,7 @@ const catSlug = categorySlug(data.category);
 <BaseLayout
   title={`Download ${data.appName} ${data.version} APK`}
   description={`Download ${data.appName} ${data.version} (${data.size}) for Android ${data.reqAndroid}. Wait for the timer, then grab the verified APK.`}
-  canonical={`/download/${data.slug}`}
+  canonical={`/download/${data.slug}/`}
   image={data.featuredImage || data.icon}
   type="article"
   noindex={true}
@@ -101,7 +101,7 @@ const catSlug = categorySlug(data.category);
     </section>
 
     <p class="mt-8 text-center text-sm">
-      <a href={`/${data.slug}`} class="font-medium text-cyan-700 hover:underline dark:text-cyan-300">
+      <a href={`/${data.slug}/`} class="font-medium text-cyan-700 hover:underline dark:text-cyan-300">
         ← Back to {data.appName} details
       </a>
     </p>

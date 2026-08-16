@@ -47,7 +47,7 @@ const tocItems = [
 <BaseLayout
   title={data.metaTitle}
   description={data.metaDescription}
-  canonical={`/${data.slug}`}
+  canonical={`/${data.slug}/`}
   image={data.featuredImage || data.icon}
   type="article"
   publishedTime={data.publishDate}
@@ -61,7 +61,7 @@ const tocItems = [
     <Breadcrumbs
       items={[
         { label: 'Home', href: '/' },
-        { label: data.category, href: `/category/${catSlug}` },
+        { label: data.category, href: `/category/${catSlug}/` },
         { label: data.appName },
       ]}
     />
@@ -101,7 +101,7 @@ const tocItems = [
               ★ {data.ratingValue.toFixed(1)} · {formatDownloads(data.totalDownloads)} downloads · {data.size}
             </p>
             <a
-              href={`/download/${data.slug}`}
+              href={`/download/${data.slug}/`}
               data-astro-prefetch="hover"
               class="mt-6 inline-flex rounded-xl bg-cyan-600 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-cyan-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-600"
             >

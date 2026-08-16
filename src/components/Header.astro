@@ -6,7 +6,7 @@ const liveCats = uniqueCategories(await getApks());
 const navHrefs = new Set(NAV.map((item) => item.href));
 const navLabels = new Set(NAV.map((item) => item.label.toLowerCase()));
 const extraCats = liveCats
-  .map((cat) => ({ href: `/category/${categorySlug(cat)}`, label: cat }))
+  .map((cat) => ({ href: `/category/${categorySlug(cat)}/`, label: cat }))
   .filter((item) => !navHrefs.has(item.href) && !navLabels.has(item.label.toLowerCase()));
 const mobileLinks = [...NAV, ...extraCats];
 ---

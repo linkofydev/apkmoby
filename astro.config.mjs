@@ -12,7 +12,9 @@ const site = process.env.PUBLIC_SITE_URL || 'https://apkmoby.com';
 export default defineConfig({
   site,
   output: 'static',
-  trailingSlash: 'never',
+  // Cloudflare Pages serves directory builds at /page/ and 308s /page → /page/.
+  // Match that so sitemap + canonicals don't point at a redirect (GSC "Redirect error").
+  trailingSlash: 'always',
   prefetch: {
     prefetchAll: true,
     defaultStrategy: 'hover',

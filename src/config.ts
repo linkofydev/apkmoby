@@ -18,9 +18,9 @@ export const SITE = {
 
 export const NAV = [
   { href: '/', label: 'Home' },
-  { href: '/games', label: 'Games' },
-  { href: '/apps', label: 'Apps' },
-  { href: '/about', label: 'About' },
+  { href: '/games/', label: 'Games' },
+  { href: '/apps/', label: 'Apps' },
+  { href: '/about/', label: 'About' },
 ] as const;
 
 /** Categories shown under “Latest Games” on the homepage. */
@@ -68,7 +68,13 @@ export function absoluteUrl(path = '/'): string {
   const base = SITE.url.replace(/\/$/, '');
   if (!path || path === '/') return `${base}/`;
   if (/^https?:\/\//.test(path)) return path;
-  return `${base}${path.startsWith('/') ? path : `/${path}`}`;
+  let p = path.startsWith('/') ? path : `/${path}`;
+  // Keep file URLs as-is; HTML routes use trailing slash (Cloudflare Pages).
+  const pathname = p.split(/[?#]/)[0] || '/';
+  if (!/\.[a-z0-9]+$/i.test(pathname) && !pathname.endsWith('/')) {
+    p = `${pathname}/${p.slice(pathname.length)}`;
+  }
+  return `${base}${p}`;
 }
 
 export function categorySlug(category: string): string {
