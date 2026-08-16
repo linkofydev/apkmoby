@@ -11,8 +11,9 @@
 /admin-panel/apk-files/ /admin-panel/apk-files 301
 /admin-panel/social-settings/ /admin-panel/social-settings 301
 
-# Sitemap alias
-/sitemap.xml /sitemap-index.xml 301
+# Point index + chunk paths at the flat sitemap (lists all published articles)
+/sitemap-index.xml /sitemap.xml 301
+/sitemap-0.xml /sitemap.xml 301
 
 # Per-page trailing-slash → canonical redirects are generated at build time
 # (see src/integrations/trailing-slash-redirects.ts) for every published article.
