@@ -1,0 +1,111 @@
+---
+import OptimizedImage from './OptimizedImage.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
+import { categorySlug, isGameCategory } from '../config';
+import type { ApkEntry } from '../lib/apk';
+
+interface Props {
+  app: ApkEntry;
+}
+
+const { app } = Astro.props;
+const { data } = app;
+const catSlug = categorySlug(data.category);
+const summary = (data.summary || '').trim();
+const sectionHref = isGameCategory(data.category) ? '/games' : '/apps';
+const sectionLabel = isGameCategory(data.category) ? 'Games' : 'Apps';
+const ratingLabel = data.ratingCount === 1 ? '1 rating' : `${data.ratingCount.toLocaleString()} ratings`;
+const looksLikePackage = /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(String(data.packageName || '')) &&
+  !String(data.packageName).includes('example');
+const storeHref = looksLikePackage
+  ? `https://play.google.com/store/apps/details?id=${data.packageName}`
+  : `/download/${data.slug}`;
+const isMod = (data.modFeatures || []).length > 0 || /mod|premium|unlocked/i.test(summary);
+---
+
+<section class="article-hero overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6 dark:border-white/10 dark:bg-[#1a1a1a]">
+  <Breadcrumbs
+    variant="hero"
+    items={[
+      { label: 'Home', href: '/' },
+      { label: sectionLabel, href: sectionHref },
+      { label: data.category, href: `/category/${catSlug}` },
+      { label: data.appName },
+    ]}
+  />
+
+  <div class="flex items-start gap-3 sm:gap-4">
+    <OptimizedImage
+      src={data.icon}
+      alt={`${data.appName} icon`}
+      width={80}
+      height={80}
+      loading="eager"
+      fetchpriority="high"
+      class="h-16 w-16 shrink-0 rounded-2xl border border-slate-200 object-cover sm:h-20 sm:w-20 dark:border-white/10"
+    />
+    <div class="min-w-0 flex-1">
+      <h1 class="text-lg font-extrabold leading-snug tracking-tight text-slate-900 sm:text-2xl dark:text-white">
+        {data.appName}
+      </h1>
+      <p class="mt-1 truncate text-sm font-medium text-lime-600 dark:text-[#b6e35b]">{data.developer}</p>
+      {
+        isMod ? (
+          <span class="mt-2 inline-flex rounded-full bg-orange-500 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+            Premium
+          </span>
+        ) : null
+      }
+    </div>
+  </div>
+
+  {
+    summary ? (
+      <p class="mt-3 text-[15px] italic leading-relaxed text-orange-500 sm:text-base dark:text-[#ff8a3d]">
+        {summary}
+      </p>
+    ) : null
+  }
+
+  <div class="mt-4 grid grid-cols-4 divide-x divide-slate-200 text-center dark:divide-white/10">
+    <div class="px-1">
+      <p class="truncate text-sm font-bold text-slate-900 sm:text-base dark:text-white">{data.version}</p>
+      <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">Version</p>
+    </div>
+    <div class="px-1">
+      <p class="truncate text-sm font-bold text-slate-900 sm:text-base dark:text-white">{data.size}</p>
+      <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">Size</p>
+    </div>
+    <a href={storeHref} class="px-1 no-underline hover:opacity-80" rel={looksLikePackage ? 'noopener noreferrer' : undefined} target={looksLikePackage ? '_blank' : undefined}>
+      <span class="mx-auto flex h-6 items-center justify-center" aria-hidden="true">
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+          <path d="M3.2 2.8 13.6 12 3.2 21.2V2.8Z" fill="#4285F4" />
+          <path d="M13.6 12 17.1 8.8 20.8 6.7c.6-.4 1.4 0 1.4.8v9c0 .8-.8 1.2-1.4.8L17.1 15.2 13.6 12Z" fill="#34A853" />
+          <path d="M3.2 21.2 13.6 12l3.5 3.2-10.3 6.5c-.8.5-1.8-.1-1.8-1.1 0-.2 0-.4.2-.6Z" fill="#FBBC04" />
+          <path d="M3.2 2.8c0-1 .9-1.6 1.8-1.1L17.1 8.8 13.6 12 3.2 2.8Z" fill="#EA4335" />
+        </svg>
+      </span>
+      <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">Get it on</p>
+    </a>
+    <div class="px-1">
+      <p class="text-sm font-bold text-slate-900 sm:text-base dark:text-white">
+        {Number(data.ratingValue).toFixed(1)}
+        <span class="text-orange-400" aria-hidden="true">★</span>
+      </p>
+      <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">{ratingLabel}</p>
+    </div>
+  </div>
+
+  <a
+    href={`/download/${data.slug}`}
+    data-astro-prefetch="hover"
+    class="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#34c759] px-5 text-base font-bold text-white shadow-sm transition hover:bg-[#2fb350] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#34c759]"
+  >
+    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+      <path d="M12 4v10" stroke-linecap="round" />
+      <path d="M8 10l4 4 4-4" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M5 18h14" stroke-linecap="round" />
+    </svg>
+    Download APK
+  </a>
+</section>

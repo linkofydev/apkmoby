@@ -8,9 +8,11 @@ export interface Crumb {
 
 interface Props {
   items: Crumb[];
+  variant?: 'default' | 'hero';
 }
 
-const { items } = Astro.props;
+const { items, variant = 'default' } = Astro.props;
+const isHero = variant === 'hero';
 
 const schema = {
   '@context': 'https://schema.org',
@@ -24,25 +26,41 @@ const schema = {
 };
 ---
 
-<nav aria-label="Breadcrumb" class="mb-6">
-  <ol class="flex flex-wrap items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400">
+<nav aria-label="Breadcrumb" class={isHero ? 'mb-4' : 'mb-6'}>
+  <ol
+    class:list={[
+      'flex flex-wrap items-center gap-1 text-xs sm:text-sm',
+      isHero ? 'text-lime-600 dark:text-[#b6e35b]' : 'text-slate-500 dark:text-slate-400',
+    ]}
+  >
     {
       items.map((item, index) => (
-        <li class="flex items-center gap-1.5">
+        <li class="flex min-w-0 items-center gap-1">
           {index > 0 && (
-            <span aria-hidden="true" class="text-slate-400 dark:text-slate-600">
-              /
+            <span aria-hidden="true" class={isHero ? 'text-slate-400 dark:text-white/50' : 'text-slate-400 dark:text-slate-600'}>
+              ›
             </span>
           )}
           {item.href && index !== items.length - 1 ? (
             <a
               href={item.href}
-              class="transition-colors hover:text-cyan-600 dark:hover:text-cyan-300"
+              class:list={[
+                'truncate transition-colors',
+                isHero
+                  ? 'hover:text-lime-500 dark:hover:text-lime-200'
+                  : 'hover:text-cyan-600 dark:hover:text-cyan-300',
+              ]}
             >
               {item.label}
             </a>
           ) : (
-            <span class="font-medium text-slate-800 dark:text-slate-200" aria-current="page">
+            <span
+              class:list={[
+                'truncate font-medium',
+                isHero ? 'text-orange-500 dark:text-[#ff8a3d]' : 'text-slate-800 dark:text-slate-200',
+              ]}
+              aria-current="page"
+            >
               {item.label}
             </span>
           )}
