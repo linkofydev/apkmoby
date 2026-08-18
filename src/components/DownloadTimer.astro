@@ -8,7 +8,6 @@ interface Props {
 }
 
 const { downloadUrl, appName, seconds = SITE.downloadTimerSeconds } = Astro.props;
-const downloadLabel = /(?:^|\s)apk$/i.test(String(appName).trim()) ? String(appName).trim() : `${appName} APK`;
 ---
 
 <div
@@ -41,12 +40,12 @@ const downloadLabel = /(?:^|\s)apk$/i.test(String(appName).trim()) ? String(appN
     class="mt-6 hidden items-center justify-center rounded-xl bg-cyan-600 px-6 py-3 text-base font-bold text-white shadow-sm transition hover:bg-cyan-500"
     download
   >
-    Download {downloadLabel}
+    Download {appName}
   </a>
   <noscript>
     <p class="mt-4 text-sm">JavaScript is off — use the direct link below.</p>
     <a class="mt-2 inline-block font-semibold text-cyan-600 underline" href={downloadUrl} rel="nofollow noopener">
-      Download {downloadLabel}
+      Download {appName}
     </a>
   </noscript>
 </div>
