@@ -1066,14 +1066,13 @@ const socialPlatformsJson = JSON.stringify(socialPlatformsForClient());
             } catch {}
           } else {
             success.innerHTML =
-              'Published live. Open: <a class="underline text-cyan-300" target="_blank" rel="noopener" href="https://apkmoby.com/' +
+              'Published. Cloudflare is deploying — the live URL is ready in about 1–2 minutes. Then open: <a class="underline text-cyan-300" target="_blank" rel="noopener" href="https://apkmoby.com/' +
               payload.slug +
               '">https://apkmoby.com/' +
               payload.slug +
-              '</a> — wait ~30s then hard-refresh homepage (Ctrl/Cmd+Shift+R). Screenshots saved: ' +
+              '</a>. Screenshots saved: ' +
               payload.screenshots.length;
             show(success, true);
-            window.open('https://apkmoby.com/' + payload.slug, '_blank', 'noopener');
             await loadList();
             setTimeout(() => {
               show(editorPanel, false);

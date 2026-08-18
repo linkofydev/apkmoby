@@ -11,7 +11,9 @@ on:
 
 concurrency:
   group: pages-production
-  cancel-in-progress: true
+  # Never cancel an in-flight production deploy. CMS publishes were 404ing
+  # because a later push (code or another article) aborted their build.
+  cancel-in-progress: false
 
 jobs:
   deploy:
