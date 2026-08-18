@@ -241,6 +241,20 @@ export async function getApp(env: GhEnv, slug: string) {
 
 export async function saveApp(env: GhEnv, data: ApkPayload, sha?: string) {
   const prepared = applyDraftDefaults(data);
+  // Hard-block incomplete publishing payloads so public pages stay consistently indexable.
+  if (!prepared.draft) {
+    const errors: string[] = [];
+    if (!String(prepared.metaTitle || '').trim()) errors.push('metaTitle');
+    if (!String(prepared.metaDescription || '').trim()) errors.push('metaDescription');
+    if (!String(prepared.publishDate || '').trim()) errors.push('publishDate');
+    if (!String(prepared.updatedDate || '').trim()) errors.push('updatedDate');
+    if (!String(prepared.icon || '').trim() || String(prepared.icon) === '/favicon.svg') errors.push('icon');
+    if (!String(prepared.featuredImage || '').trim() || String(prepared.featuredImage).includes('hero-mod-1280'))
+      errors.push('featuredImage');
+    if (!String(prepared.downloadUrl || '').trim() || String(prepared.downloadUrl) === 'https://apkmoby.com/')
+      errors.push('downloadUrl');
+    if (errors.length) throw new Error(`Publish blocked: missing/placeholder ${errors.join(', ')}`);
+  }
   const message = prepared.draft
     ? sha
       ? `cms: draft update ${prepared.slug}`
