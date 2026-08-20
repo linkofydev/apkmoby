@@ -17,9 +17,13 @@ const sectionLabel = isGameCategory(data.category) ? 'Games' : 'Apps';
 const ratingLabel = data.ratingCount === 1 ? '1 rating' : `${data.ratingCount.toLocaleString()} ratings`;
 const looksLikePackage = /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(String(data.packageName || '')) &&
   !String(data.packageName).includes('example');
-const storeHref = looksLikePackage
-  ? `https://play.google.com/store/apps/details?id=${data.packageName}`
-  : `/download/${data.slug}`;
+const customStore = String(data.playStoreUrl || '').trim();
+const storeHref = customStore
+  ? customStore
+  : looksLikePackage
+    ? `https://play.google.com/store/apps/details?id=${data.packageName}`
+    : `/download/${data.slug}`;
+const storeExternal = /^https?:\/\//i.test(storeHref);
 const isMod = (data.modFeatures || []).length > 0 || /mod|premium|unlocked/i.test(summary);
 ---
 
@@ -76,7 +80,7 @@ const isMod = (data.modFeatures || []).length > 0 || /mod|premium|unlocked/i.tes
       <p class="truncate text-sm font-bold text-slate-900 sm:text-base dark:text-white">{data.size}</p>
       <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500 sm:text-xs">Size</p>
     </div>
-    <a href={storeHref} class="px-1 no-underline hover:opacity-80" rel={looksLikePackage ? 'noopener noreferrer' : undefined} target={looksLikePackage ? '_blank' : undefined}>
+    <a href={storeHref} class="px-1 no-underline hover:opacity-80" rel={storeExternal ? 'noopener noreferrer' : undefined} target={storeExternal ? '_blank' : undefined}>
       <span class="mx-auto flex h-6 items-center justify-center" aria-hidden="true">
         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none">
           <path d="M3.2 2.8 13.6 12 3.2 21.2V2.8Z" fill="#4285F4" />

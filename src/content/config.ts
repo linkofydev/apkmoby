@@ -29,6 +29,7 @@ const apk = defineCollection({
     size: z.coerce.string(),
     developer: z.coerce.string(),
     packageName: z.coerce.string(),
+    playStoreUrl: z.coerce.string().optional().default(''),
     reqAndroid: z.coerce.string(),
     totalDownloads: z.union([z.string(), z.number()]),
     ratingValue: z.coerce.number(),

@@ -15,6 +15,7 @@ export interface ApkPayload {
   size: string;
   developer: string;
   packageName: string;
+  playStoreUrl?: string;
   reqAndroid: string;
   totalDownloads: string | number;
   ratingValue: number;
@@ -63,6 +64,7 @@ export function toMarkdown(data: ApkPayload): string {
     `size: ${yamlEscape(data.size)}`,
     `developer: ${yamlEscape(data.developer)}`,
     `packageName: ${yamlEscape(data.packageName)}`,
+    `playStoreUrl: ${yamlEscape(data.playStoreUrl || '')}`,
     `reqAndroid: ${yamlEscape(data.reqAndroid)}`,
     `totalDownloads: ${yamlEscape(data.totalDownloads)}`,
     `ratingValue: ${Number(data.ratingValue) || 0}`,
@@ -166,6 +168,7 @@ export function fromMarkdown(raw: string): ApkPayload {
     size: String(data.size || ''),
     developer: String(data.developer || ''),
     packageName: String(data.packageName || ''),
+    playStoreUrl: String(data.playStoreUrl || ''),
     reqAndroid: String(data.reqAndroid || ''),
     totalDownloads: (data.totalDownloads as string | number) ?? '',
     ratingValue: Number(data.ratingValue || 0),
