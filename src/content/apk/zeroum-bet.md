@@ -10,6 +10,7 @@ version: "v1.0.0"
 size: "6.6 MB"
 developer: "Zeroum"
 packageName: "zeroum_bet_apk.apk"
+playStoreUrl: "https://apkmoby.com/zeroum-bet"
 reqAndroid: "4.0+"
 totalDownloads: "1K+"
 ratingValue: 4.5
