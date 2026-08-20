@@ -15,14 +15,9 @@ const summary = (data.summary || '').trim();
 const sectionHref = isGameCategory(data.category) ? '/games' : '/apps';
 const sectionLabel = isGameCategory(data.category) ? 'Games' : 'Apps';
 const ratingLabel = data.ratingCount === 1 ? '1 rating' : `${data.ratingCount.toLocaleString()} ratings`;
-const looksLikePackage = /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/.test(String(data.packageName || '')) &&
-  !String(data.packageName).includes('example');
 const customStore = String(data.playStoreUrl || '').trim();
-const storeHref = customStore
-  ? customStore
-  : looksLikePackage
-    ? `https://play.google.com/store/apps/details?id=${data.packageName}`
-    : `/download/${data.slug}`;
+// Custom Play/store URL when set; otherwise same article URL (never invent a Play link from packageName).
+const storeHref = customStore || `/${data.slug}`;
 const storeExternal = /^https?:\/\//i.test(storeHref);
 const isMod = (data.modFeatures || []).length > 0 || /mod|premium|unlocked/i.test(summary);
 ---
