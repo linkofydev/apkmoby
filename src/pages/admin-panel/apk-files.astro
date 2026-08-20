@@ -45,9 +45,9 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       <section class="mb-8 rounded-2xl border border-white/10 bg-ink-card/60 p-5">
         <div class="mb-4 flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h2 class="text-xl font-bold">Remote APK Manager</h2>
+            <h2 class="text-xl font-bold">APK Manager</h2>
             <p class="mt-1 text-sm text-slate-400">
-              Fetch a direct APK URL and stream it to Cloudflare R2. Public link:
+              Upload from a remote URL or from your PC to Cloudflare R2. Public link:
               <code class="text-cyan-300">https://dl.apkmoby.com/apk/&lt;filename&gt;</code>
             </p>
           </div>
@@ -56,7 +56,14 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         <form id="remote-apk-form" class="grid gap-4 md:grid-cols-2">
           <label class="text-sm md:col-span-2">
             Source remote APK URL
-            <input id="r2-remote-url" name="remoteUrl" type="url" required placeholder="https://example.com/files/app.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+            <input id="r2-remote-url" name="remoteUrl" type="url" placeholder="https://example.com/files/app.apk" class="mt-1 w-full rounded-lg border border-white/10 bg-ink px-3 py-2" />
+          </label>
+          <label class="text-sm md:col-span-2">
+            Or upload APK from PC
+            <div class="mt-1 flex flex-wrap items-center gap-2">
+              <input id="r2-local-file" type="file" accept=".apk,application/vnd.android.package-archive" class="block w-full max-w-xl text-sm text-slate-300 file:mr-3 file:rounded-lg file:border-0 file:bg-white/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-cyan-200" />
+            </div>
+            <p class="mt-1 text-xs text-slate-500">Use either a remote URL or a local <code class="text-slate-300">.apk</code> file (max 512MB).</p>
           </label>
           <label class="text-sm md:col-span-2">
             Target file slug / filename
@@ -65,6 +72,7 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
           </label>
           <div class="md:col-span-2 flex flex-wrap items-center gap-3">
             <button id="btn-r2-upload" type="submit" class="rounded-xl bg-cyan-400 px-5 py-2.5 text-sm font-bold text-ink">Fetch &amp; Upload to R2</button>
+            <button id="btn-r2-local" type="button" class="rounded-xl border border-cyan-400/40 px-5 py-2.5 text-sm font-semibold text-cyan-200">Upload from PC</button>
             <p id="r2-message" class="text-sm text-slate-400"></p>
           </div>
           <div id="r2-result" class="hidden md:col-span-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
@@ -190,8 +198,17 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
       const remoteUrl = document.getElementById('r2-remote-url').value.trim();
       const fileName = document.getElementById('r2-file-name').value.trim();
       const btn = document.getElementById('btn-r2-upload');
-      if (!remoteUrl || !fileName) return;
+      const localBtn = document.getElementById('btn-r2-local');
+      if (!remoteUrl) {
+        r2Message.textContent = 'Enter a remote APK URL, or use Upload from PC.';
+        return;
+      }
+      if (!fileName) {
+        r2Message.textContent = 'Target filename is required.';
+        return;
+      }
       btn.disabled = true;
+      localBtn.disabled = true;
       show(r2Result, false);
       r2Message.textContent = '';
       setR2Status('Downloading', 'busy');
@@ -214,6 +231,63 @@ import AdminLayout from '../../layouts/AdminLayout.astro';
         r2Message.textContent = err.message || 'Upload failed';
       } finally {
         btn.disabled = false;
+        localBtn.disabled = false;
+      }
+    });
+
+    document.getElementById('r2-local-file').addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const nameInput = document.getElementById('r2-file-name');
+      if (!nameInput.value.trim()) nameInput.value = file.name;
+    });
+
+    document.getElementById('btn-r2-local').addEventListener('click', async () => {
+      const fileInput = document.getElementById('r2-local-file');
+      const file = fileInput.files && fileInput.files[0];
+      const fileName = document.getElementById('r2-file-name').value.trim() || (file && file.name) || '';
+      const btn = document.getElementById('btn-r2-upload');
+      const localBtn = document.getElementById('btn-r2-local');
+      if (!file) {
+        r2Message.textContent = 'Choose an APK file from your PC first.';
+        return;
+      }
+      if (!String(file.name || '').toLowerCase().endsWith('.apk')) {
+        r2Message.textContent = 'Only .apk files are allowed.';
+        return;
+      }
+      if (!fileName) {
+        r2Message.textContent = 'Target filename is required.';
+        return;
+      }
+      if (file.size > 512 * 1024 * 1024) {
+        r2Message.textContent = 'APK larger than 512MB is not supported.';
+        return;
+      }
+      btn.disabled = true;
+      localBtn.disabled = true;
+      show(r2Result, false);
+      r2Message.textContent = '';
+      setR2Status('Uploading', 'busy');
+      r2Message.textContent = 'Uploading ' + file.name + ' (' + formatBytes(file.size) + ') to R2…';
+      try {
+        const fd = new FormData();
+        fd.append('file', file, file.name);
+        fd.append('fileName', fileName);
+        const data = await api('/api/admin/apk-files', { method: 'POST', body: fd });
+        setR2Status('Success', 'ok');
+        r2Message.textContent =
+          'Uploaded as ' + data.key + (data.bytes ? ' (' + Math.round((data.bytes / 1024 / 1024) * 10) / 10 + ' MB)' : '');
+        r2PublicUrl.value = data.publicUrl;
+        show(r2Result, true);
+        fileInput.value = '';
+        await loadList();
+      } catch (err) {
+        setR2Status('Error', 'err');
+        r2Message.textContent = err.message || 'Upload failed';
+      } finally {
+        btn.disabled = false;
+        localBtn.disabled = false;
       }
     });
 

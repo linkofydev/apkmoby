@@ -97,6 +97,73 @@ export type RemoteUploadResult = {
   via: 'r2-binding' | 's3-api';
 };
 
+const MAX_APK_BYTES = 512 * 1024 * 1024;
+
+/** Put an APK body to R2 at `apk/<fileName>`. Prefers R2 binding; falls back to S3 API. */
+export async function putApkBodyToR2(
+  env: R2Env,
+  body: ReadableStream | ArrayBuffer | Blob,
+  fileNameInput: string,
+  opts?: { bytes?: number; source?: string },
+): Promise<RemoteUploadResult> {
+  const fileName = sanitizeApkFileName(fileNameInput);
+  const key = `apk/${fileName}`;
+  const bytes = opts?.bytes;
+  if (bytes != null && Number.isFinite(bytes) && bytes > MAX_APK_BYTES) {
+    throw new Error('APK larger than 512MB is not supported via this uploader');
+  }
+  const sourceMeta = String(opts?.source || 'local-upload').slice(0, 120);
+
+  if (env.APK_BUCKET) {
+    const put = await env.APK_BUCKET.put(key, body, {
+      httpMetadata: {
+        contentType: APK_MIME,
+        contentDisposition: `attachment; filename="${fileName}"`,
+        cacheControl: 'public, max-age=31536000, immutable',
+      },
+      customMetadata: {
+        'x-robots-tag': ROBOTS,
+        source: sourceMeta,
+      },
+    });
+    return {
+      key,
+      fileName,
+      publicUrl: publicApkUrl(env, fileName),
+      bytes: put.size,
+      etag: put.etag,
+      via: 'r2-binding',
+    };
+  }
+
+  const { bucket } = requireS3Config(env);
+  const client = createR2S3Client(env);
+  const command = new PutObjectCommand({
+    Bucket: bucket,
+    Key: key,
+    // ReadableStream / Blob / ArrayBuffer — AWS SDK accepts these in Workers.
+    Body: body as never,
+    ContentType: APK_MIME,
+    ContentDisposition: `attachment; filename="${fileName}"`,
+    CacheControl: 'public, max-age=31536000, immutable',
+    Metadata: {
+      'x-robots-tag': ROBOTS,
+      source: sourceMeta,
+    },
+    ...(bytes && Number.isFinite(bytes) ? { ContentLength: bytes } : {}),
+  });
+
+  const out = await client.send(command);
+  return {
+    key,
+    fileName,
+    publicUrl: publicApkUrl(env, fileName),
+    bytes,
+    etag: out.ETag,
+    via: 's3-api',
+  };
+}
+
 /**
  * Stream remoteUrl → R2 key `apk/<fileName>` without buffering the full APK in memory.
  * Prefers native R2 binding when present; otherwise uses S3-compatible PutObject.
@@ -106,8 +173,6 @@ export async function streamRemoteApkToR2(
   remoteUrl: string,
   fileNameInput: string,
 ): Promise<RemoteUploadResult> {
-  const fileName = sanitizeApkFileName(fileNameInput);
-  const key = `apk/${fileName}`;
   const source = assertSafeRemoteUrl(remoteUrl);
 
   const upstream = await fetch(source.toString(), {
@@ -126,59 +191,11 @@ export async function streamRemoteApkToR2(
 
   const contentLength = upstream.headers.get('content-length');
   const bytes = contentLength ? Number(contentLength) : undefined;
-  if (bytes != null && Number.isFinite(bytes) && bytes > 512 * 1024 * 1024) {
-    throw new Error('APK larger than 512MB is not supported via this uploader');
-  }
 
-  // Prefer Workers R2 binding (true stream, lighter on bundle/CPU).
-  if (env.APK_BUCKET) {
-    const put = await env.APK_BUCKET.put(key, upstream.body, {
-      httpMetadata: {
-        contentType: APK_MIME,
-        contentDisposition: `attachment; filename="${fileName}"`,
-        cacheControl: 'public, max-age=31536000, immutable',
-      },
-      customMetadata: {
-        'x-robots-tag': ROBOTS,
-        source: source.hostname,
-      },
-    });
-    return {
-      key,
-      fileName,
-      publicUrl: publicApkUrl(env, fileName),
-      bytes: put.size,
-      etag: put.etag,
-      via: 'r2-binding',
-    };
-  }
-
-  const { bucket } = requireS3Config(env);
-  const client = createR2S3Client(env);
-  const command = new PutObjectCommand({
-    Bucket: bucket,
-    Key: key,
-    Body: upstream.body,
-    ContentType: APK_MIME,
-    ContentDisposition: `attachment; filename="${fileName}"`,
-    CacheControl: 'public, max-age=31536000, immutable',
-    // Stored as x-amz-meta-*; public noindex is also enforced on dl.apkmoby.com Worker / Transform Rules.
-    Metadata: {
-      'x-robots-tag': ROBOTS,
-      source: source.hostname,
-    },
-    ...(bytes && Number.isFinite(bytes) ? { ContentLength: bytes } : {}),
-  });
-
-  const out = await client.send(command);
-  return {
-    key,
-    fileName,
-    publicUrl: publicApkUrl(env, fileName),
+  return putApkBodyToR2(env, upstream.body, fileNameInput, {
     bytes,
-    etag: out.ETag,
-    via: 's3-api',
-  };
+    source: source.hostname,
+  });
 }
 
 export type ApkFileRow = {
